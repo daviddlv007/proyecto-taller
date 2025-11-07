@@ -1,0 +1,16 @@
+# Placeholder - Reemplazar {$DOMAIN} con tu dominio real
+{$DOMAIN} {
+    # Frontend
+    handle /* {
+        reverse_proxy frontend:80
+    }
+}
+
+# API Subdomain
+api.{$DOMAIN} {
+    # Backend API
+    reverse_proxy backend:8000
+}
+
+# Configuración automática de HTTPS con Let's Encrypt
+# Caddy maneja certificados SSL automáticamente

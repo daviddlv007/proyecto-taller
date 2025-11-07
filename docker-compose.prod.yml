@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: appswap-postgres-prod
+    environment:
+      POSTGRES_USER: appswap
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: appswap_db
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    networks:
+      - appswap-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appswap"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: appswap-backend-prod
+    environment:
+      - DATABASE_URL=postgresql://appswap:${POSTGRES_PASSWORD}@postgres:5432/appswap_db
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend_models_prod:/app/ml_models/models
+    networks:
+      - appswap-network
+    restart: unless-stopped
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./appswap
+      dockerfile: Dockerfile
+    container_name: appswap-frontend-prod
+    environment:
+      - VITE_API_URL=https://api.${DOMAIN}
+    depends_on:
+      - backend
+    networks:
+      - appswap-network
+    restart: unless-stopped
+
+  # Caddy Reverse Proxy
+  caddy:
+    image: caddy:2-alpine
+    container_name: appswap-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN:-example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - appswap-network
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data_prod:
+    driver: local
+  backend_models_prod:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+networks:
+  appswap-network:
+    driver: bridge

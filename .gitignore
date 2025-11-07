@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+**/node_modules/
+appswap/node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/__pycache__/
+backend/**/__pycache__/
+backend/venv/
+backend/ml_models/__pycache__/
+backend/ml_models/**/__pycache__/
+*.egg-info/
+
+# Build outputs
+dist/
+build/
+appswap/dist/
+*.egg
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Vite
+.vite/
+appswap/.vite/
+
+# ML Models (large files)
+backend/ml_models/models/*.pkl
+backend/ml_models/models/*.joblib
+
+# Database
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+.cache/
+
+# OS
+Thumbs.db
