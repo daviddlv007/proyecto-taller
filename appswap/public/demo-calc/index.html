@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalculadoraPro Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      color: #667eea;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .mode-indicator {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .mode-indicator.demo {
+      background: #ffd700;
+      color: #333;
+    }
+
+    .mode-indicator.pro {
+      background: #4caf50;
+      color: white;
+    }
+
+    .display {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      text-align: right;
+      font-size: 36px;
+      font-weight: 300;
+      min-height: 80px;
+      word-wrap: break-word;
+      color: #333;
+      border: 2px solid #e0e0e0;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      padding: 20px;
+      font-size: 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .number {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .operator {
+      background: #667eea;
+      color: white;
+    }
+
+    .operator.locked {
+      background: #ccc;
+      color: #999;
+      cursor: not-allowed;
+      position: relative;
+    }
+
+    .operator.locked::after {
+      content: '🔒';
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 12px;
+    }
+
+    .equals {
+      background: #764ba2;
+      color: white;
+      grid-column: span 2;
+    }
+
+    .clear {
+      background: #ff6b6b;
+      color: white;
+      grid-column: span 2;
+    }
+
+    .auth-section {
+      margin-top: 20px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 10px;
+      border: 2px dashed #667eea;
+    }
+
+    .auth-section.hidden {
+      display: none;
+    }
+
+    .auth-section h3 {
+      color: #667eea;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .auth-section p {
+      color: #666;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .auth-button {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .auth-button:hover {
+      background: #5568d3;
+    }
+
+    .logout-button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .logout-button:hover {
+      background: #ee5a52;
+    }
+
+    .success-message {
+      background: #4caf50;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      text-align: center;
+      font-weight: 600;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .info-text {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+
+    .info-text strong {
+      color: #667eea;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>CalculadoraPro</h1>
+      <div class="mode-indicator demo" id="modeIndicator">MODO DEMO</div>
+      <p class="info-text" id="infoText">
+        <strong>Versión Demo:</strong> Solo suma y resta disponibles<br>
+        Compra la versión PRO para desbloquear multiplicación y división
+      </p>
+    </div>
+
+    <div class="display" id="display">0</div>
+
+    <div class="buttons">
+      <button class="clear" onclick="clearDisplay()">AC</button>
+      <button class="operator" onclick="setOperator('/')">÷</button>
+      <button class="operator" onclick="setOperator('*')">×</button>
+      
+      <button class="number" onclick="appendNumber('7')">7</button>
+      <button class="number" onclick="appendNumber('8')">8</button>
+      <button class="number" onclick="appendNumber('9')">9</button>
+      <button class="operator" onclick="setOperator('-')">−</button>
+      
+      <button class="number" onclick="appendNumber('4')">4</button>
+      <button class="number" onclick="appendNumber('5')">5</button>
+      <button class="number" onclick="appendNumber('6')">6</button>
+      <button class="operator" onclick="setOperator('+')">+</button>
+      
+      <button class="number" onclick="appendNumber('1')">1</button>
+      <button class="number" onclick="appendNumber('2')">2</button>
+      <button class="number" onclick="appendNumber('3')">3</button>
+      <button class="equals" onclick="calculate()">=</button>
+      
+      <button class="number" onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+      <button class="number" onclick="appendNumber('.')">.</button>
+    </div>
+
+    <div class="auth-section" id="authSection">
+      <h3>🔓 Desbloquear Versión PRO</h3>
+      <p>Ingresa tus credenciales para acceder a todas las funciones</p>
+      
+      <div class="form-group">
+        <label for="username">Usuario:</label>
+        <input type="text" id="username" placeholder="Ingresa tu usuario">
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Contraseña:</label>
+        <input type="password" id="password" placeholder="Ingresa tu contraseña">
+      </div>
+      
+      <button class="auth-button" onclick="authenticate()">Iniciar Sesión</button>
+      
+      <p class="info-text" style="margin-top: 15px;">
+        <em>Para esta demo, acepta cualquier usuario y contraseña</em>
+      </p>
+    </div>
+
+    <button class="logout-button hidden" id="logoutButton" onclick="logout()">
+      Cerrar Sesión (Volver a Demo)
+    </button>
+  </div>
+
+  <script>
+    let currentValue = '0';
+    let previousValue = null;
+    let currentOperator = null;
+    let isPro = false;
+
+    // Check if user is already authenticated
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedProStatus = localStorage.getItem('calculatorProMode');
+      if (savedProStatus === 'true') {
+        activateProMode();
+      } else {
+        updateButtonStates();
+      }
+    });
+
+    function updateDisplay() {
+      document.getElementById('display').textContent = currentValue;
+    }
+
+    function appendNumber(num) {
+      if (currentValue === '0' && num !== '.') {
+        currentValue = num;
+      } else if (num === '.' && currentValue.includes('.')) {
+        return;
+      } else {
+        currentValue += num;
+      }
+      updateDisplay();
+    }
+
+    function setOperator(op) {
+      // Check if operation is locked
+      if (!isPro && (op === '*' || op === '/')) {
+        alert('🔒 Esta función está disponible solo en la versión PRO.\n\nCompra la app para desbloquear multiplicación y división.');
+        return;
+      }
+
+      if (currentOperator !== null) {
+        calculate();
+      }
+      previousValue = parseFloat(currentValue);
+      currentOperator = op;
+      currentValue = '0';
+    }
+
+    function calculate() {
+      if (currentOperator === null || previousValue === null) {
+        return;
+      }
+
+      const current = parseFloat(currentValue);
+      let result;
+
+      switch (currentOperator) {
+        case '+':
+          result = previousValue + current;
+          break;
+        case '-':
+          result = previousValue - current;
+          break;
+        case '*':
+          if (!isPro) return;
+          result = previousValue * current;
+          break;
+        case '/':
+          if (!isPro) return;
+          if (current === 0) {
+            alert('Error: División por cero');
+            clearDisplay();
+            return;
+          }
+          result = previousValue / current;
+          break;
+      }
+
+      currentValue = result.toString();
+      currentOperator = null;
+      previousValue = null;
+      updateDisplay();
+    }
+
+    function clearDisplay() {
+      currentValue = '0';
+      previousValue = null;
+      currentOperator = null;
+      updateDisplay();
+    }
+
+    function updateButtonStates() {
+      const operators = document.querySelectorAll('.operator');
+      operators.forEach(btn => {
+        const text = btn.textContent;
+        if (!isPro && (text === '×' || text === '÷')) {
+          btn.classList.add('locked');
+          btn.disabled = false; // Keep enabled to show alert
+        } else {
+          btn.classList.remove('locked');
+          btn.disabled = false;
+        }
+      });
+    }
+
+    function authenticate() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!username || !password) {
+        alert('Por favor, ingresa usuario y contraseña');
+        return;
+      }
+
+      // Simulated authentication - accepts any credentials
+      localStorage.setItem('calculatorProMode', 'true');
+      activateProMode();
+
+      // Show success message
+      const authSection = document.getElementById('authSection');
+      const successMsg = document.createElement('div');
+      successMsg.className = 'success-message';
+      successMsg.textContent = '✓ ¡Autenticación exitosa! Versión PRO activada';
+      authSection.insertBefore(successMsg, authSection.firstChild);
+
+      setTimeout(() => {
+        authSection.classList.add('hidden');
+      }, 1500);
+    }
+
+    function activateProMode() {
+      isPro = true;
+      
+      // Update mode indicator
+      const modeIndicator = document.getElementById('modeIndicator');
+      modeIndicator.textContent = 'MODO PRO';
+      modeIndicator.classList.remove('demo');
+      modeIndicator.classList.add('pro');
+
+      // Update info text
+      const infoText = document.getElementById('infoText');
+      infoText.innerHTML = '<strong>Versión PRO:</strong> Todas las funciones desbloqueadas ✓';
+
+      // Hide auth section, show logout button
+      document.getElementById('authSection').classList.add('hidden');
+      document.getElementById('logoutButton').classList.remove('hidden');
+
+      // Update button states
+      updateButtonStates();
+    }
+
+    function logout() {
+      localStorage.removeItem('calculatorProMode');
+      isPro = false;
+
+      // Update mode indicator
+      const modeIndicator = document.getElementById('modeIndicator');
+      modeIndicator.textContent = 'MODO DEMO';
+      modeIndicator.classList.remove('pro');
+      modeIndicator.classList.add('demo');
+
+      // Update info text
+      const infoText = document.getElementById('infoText');
+      infoText.innerHTML = '<strong>Versión Demo:</strong> Solo suma y resta disponibles<br>Compra la versión PRO para desbloquear multiplicación y división';
+
+      // Show auth section, hide logout button
+      document.getElementById('authSection').classList.remove('hidden');
+      document.getElementById('logoutButton').classList.add('hidden');
+
+      // Clear form
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+
+      // Update button states
+      updateButtonStates();
+
+      // Clear display
+      clearDisplay();
+    }
+
+    // Initialize button states
+    updateButtonStates();
+  </script>
+</body>
+</html>

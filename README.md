@@ -98,6 +98,44 @@ El sistema incluye 2 modelos ML:
 
 ---
 
+## 🧮 Demo: CalculadoraPro
+
+El proyecto incluye una **aplicación de calculadora embebida** que demuestra el modelo de negocio completo de AppSwap.
+
+### ✨ Características
+
+- **Modo Demo (Gratuito)**: Suma y resta
+- **Modo PRO ($9.99)**: Multiplicación y división desbloqueadas
+- **Autenticación**: Sistema de credenciales post-compra
+- **Persistencia**: Estado guardado en localStorage
+
+### 🎯 Flujo de Demostración
+
+1. **Probar Demo**: http://localhost:5173/demo-calc/
+2. **Ver limitaciones**: Solo suma/resta funcionan
+3. **Comprar** como Pedro (pedro@empresa.com)
+4. **Recibir credenciales** automáticamente
+5. **Desbloquear PRO**: Todas las operaciones disponibles
+
+### 🚀 Script de Prueba Rápida
+
+```bash
+./test-calculator.sh
+```
+
+Este script:
+- ✅ Verifica que la app esté registrada
+- ✅ Muestra URLs de acceso directo
+- ✅ Proporciona credenciales de prueba
+- ✅ Guía paso a paso del flujo
+
+### 📚 Documentación Completa
+
+- **Resumen**: [CALCULADORA_DEMO_SUMMARY.md](./CALCULADORA_DEMO_SUMMARY.md)
+- **Guía de uso**: [appswap/public/demo-calc/README.md](./appswap/public/demo-calc/README.md)
+
+---
+
 ## 🔄 Flujo de Reset (Solución al Problema de IDs)
 
 ### ❌ Problema Original
