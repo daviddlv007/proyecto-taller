@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
 import {
@@ -27,7 +27,7 @@ interface SalesData {
   total_apps: number;
   total_sales: number;
   total_revenue: number;
-  sales: any[];
+  sales: Payment[];
 }
 
 interface DashboardStats {
@@ -36,18 +36,23 @@ interface DashboardStats {
   totalRevenue: number;
   averageRating: number;
   allApps: App[];
-  topApps: Array<{ app: App; sales: number }>;
+  topApps: Array<{ app: App; sales: number; revenue: number }>;
   recentReviews: Review[];
-  recommendations: string[];
+  salesByApp: Map<number, { sales: number; revenue: number }>;
 }
 
 export default function Dashboard() {
   const theme = useTheme();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [hoveredBar, setHoveredBar] = useState<string | null>(null);
+  const [hoveredApp, setHoveredApp] = useState<number | null>(null);
+  
+  // Estados para filtros interactivos
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'sales' | 'revenue'>('revenue');
+  const [topN, setTopN] = useState<number>(6);
 
-  // Obtener datos de ventas
-  const { data: salesData } = useQuery<SalesData>({
+  // Obtener datos de ventas con auto-refetch cada 30 segundos
+  const { data: salesData, isLoading: salesLoading } = useQuery<SalesData>({
     queryKey: ['vendor-sales'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
@@ -59,74 +64,97 @@ export default function Dashboard() {
       if (!response.ok) throw new Error('Error fetching sales');
       return response.json();
     },
+    refetchInterval: 30000, // Refetch cada 30 segundos
+    staleTime: 10000, // Considerar datos stale después de 10 segundos
   });
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const [apps, payments] = await Promise.all([api.getApps(), api.getPayments()]);
+  // Obtener apps del vendor con auto-refetch
+  const { data: apps, isLoading: appsLoading } = useQuery<App[]>({
+    queryKey: ['vendor-apps'],
+    queryFn: api.getApps,
+    refetchInterval: 30000,
+    staleTime: 10000,
+  });
 
-        // Calcular estadísticas
-        const confirmedPayments = payments.filter((p: Payment) => p.status === 'confirmed');
-        const totalSales = confirmedPayments.length;
-
-        // Calcular revenue desde salesData si está disponible
-        const totalRevenue = salesData?.total_revenue || 0;
-
-        // Top apps por ventas
-        const salesByApp = new Map<number, number>();
-        confirmedPayments.forEach((payment: Payment) => {
-          const count = salesByApp.get(payment.app_id) || 0;
-          salesByApp.set(payment.app_id, count + 1);
-        });
-
-        const topApps = apps
-          .map((app: App) => ({
-            app,
-            sales: salesByApp.get(app.id) || 0,
-          }))
-          .sort((a, b) => b.sales - a.sales)
-          .slice(0, 5);
-
-        // Obtener reviews recientes
-        let allReviews: Review[] = [];
-        for (const app of apps.slice(0, 5)) {
-          try {
-            const reviews = await api.getAppReviews(app.id);
-            allReviews = [...allReviews, ...reviews];
-          } catch (err) {
-            console.error(`Error fetching reviews for app ${app.id}:`, err);
-          }
+  // Obtener todas las reviews con auto-refetch
+  const { data: allReviewsData, isLoading: reviewsLoading } = useQuery<Review[]>({
+    queryKey: ['vendor-reviews', apps?.map((a) => a.id)],
+    queryFn: async () => {
+      if (!apps || apps.length === 0) return [];
+      
+      const reviewsPromises = apps.map(async (app) => {
+        try {
+          return await api.getAppReviews(app.id);
+        } catch (err) {
+          console.error(`Error fetching reviews for app ${app.id}:`, err);
+          return [];
         }
+      });
+      
+      const reviewsArrays = await Promise.all(reviewsPromises);
+      return reviewsArrays.flat();
+    },
+    enabled: !!apps && apps.length > 0,
+    refetchInterval: 60000, // Refetch reviews cada 60 segundos
+    staleTime: 30000,
+  });
 
-        const recentReviews = allReviews.slice(0, 5);
-        const averageRating =
-          allReviews.length > 0
-            ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
-            : 0;
+  // Procesar datos para estadísticas
+  const stats: DashboardStats | null = (() => {
+    if (!apps || !salesData) return null;
 
-        setStats({
-          totalApps: apps.length,
-          totalSales,
-          totalRevenue,
-          averageRating,
-          allApps: apps,
-          topApps,
-          recentReviews,
-          recommendations: [],
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
+    // salesData.sales ya contiene solo ventas confirmadas del vendor
+    const vendorSales = salesData.sales;
+    
+    // Calcular ventas y revenue por app
+    const salesByApp = new Map<number, { sales: number; revenue: number }>();
+    vendorSales.forEach((sale: any) => {
+      const current = salesByApp.get(sale.app_id) || { sales: 0, revenue: 0 };
+      // Usar el precio que viene en la venta (histórico)
+      const price = sale.price || 0;
+      
+      salesByApp.set(sale.app_id, {
+        sales: current.sales + 1,
+        revenue: current.revenue + price,
+      });
+    });
+
+    // Top apps por ventas
+    const topApps = apps
+      .map((app: App) => {
+        const appData = salesByApp.get(app.id) || { sales: 0, revenue: 0 };
+        return {
+          app,
+          sales: appData.sales,
+          revenue: appData.revenue,
+        };
+      })
+      .sort((a, b) => b.sales - a.sales)
+      .slice(0, 5);
+
+    // Reviews recientes
+    const recentReviews = (allReviewsData || [])
+      .sort((a, b) => b.id - a.id) // Ordenar por ID (más reciente primero)
+      .slice(0, 5);
+
+    const averageRating =
+      allReviewsData && allReviewsData.length > 0
+        ? allReviewsData.reduce((sum, r) => sum + r.rating, 0) / allReviewsData.length
+        : 0;
+
+    return {
+      totalApps: apps.length,
+      totalSales: salesData.total_sales,
+      totalRevenue: salesData.total_revenue,
+      averageRating,
+      allApps: apps,
+      topApps,
+      recentReviews,
+      salesByApp,
     };
+  })();
 
-    fetchDashboardData();
-  }, [salesData]);
-
-  if (loading) {
+  if (salesLoading || appsLoading || reviewsLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
         <CircularProgress />
@@ -348,23 +376,42 @@ export default function Dashboard() {
         {/* Gráfico de Barras - Ventas por Categoría */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
-            <Box display="flex" alignItems="center" gap={1} mb={3}>
-              <CategoryIcon color="primary" />
-              <Typography variant="h6" fontWeight={600}>
-                Ventas por Categoría
-              </Typography>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <CategoryIcon color="primary" />
+                <Typography variant="h6" fontWeight={600}>
+                  Ventas por Categoría
+                </Typography>
+              </Box>
+              {/* Control de ordenamiento */}
+              <Box display="flex" gap={1}>
+                <Chip
+                  label="Por Ventas"
+                  size="small"
+                  color={sortBy === 'sales' ? 'primary' : 'default'}
+                  onClick={() => setSortBy('sales')}
+                  sx={{ cursor: 'pointer' }}
+                />
+                <Chip
+                  label="Por Revenue"
+                  size="small"
+                  color={sortBy === 'revenue' ? 'primary' : 'default'}
+                  onClick={() => setSortBy('revenue')}
+                  sx={{ cursor: 'pointer' }}
+                />
+              </Box>
             </Box>
 
             {(() => {
-              // Agrupar apps por categoría
+              // Agrupar apps por categoría usando el Map de salesByApp
               const salesByCategory = stats.allApps.reduce(
                 (acc, app) => {
-                  const appSales = stats.topApps.find((t) => t.app.id === app.id)?.sales || 0;
+                  const appData = stats.salesByApp.get(app.id) || { sales: 0, revenue: 0 };
                   if (!acc[app.category]) {
                     acc[app.category] = { sales: 0, revenue: 0, count: 0 };
                   }
-                  acc[app.category].sales += appSales;
-                  acc[app.category].revenue += appSales * app.price;
+                  acc[app.category].sales += appData.sales;
+                  acc[app.category].revenue += appData.revenue;
                   acc[app.category].count += 1;
                   return acc;
                 },
@@ -372,15 +419,23 @@ export default function Dashboard() {
               );
 
               const categories = Object.entries(salesByCategory)
-                .sort(([, a], [, b]) => b.sales - a.sales)
+                .sort(([, a], [, b]) => {
+                  if (sortBy === 'sales') {
+                    return b.sales - a.sales;
+                  }
+                  return b.revenue - a.revenue;
+                })
                 .slice(0, 6);
 
-              const maxSales = Math.max(...categories.map(([, data]) => data.sales), 1);
+              const maxValue = Math.max(
+                ...categories.map(([, data]) => (sortBy === 'sales' ? data.sales : data.revenue)),
+                1
+              );
               const chartHeight = 220;
               const barWidth = 40;
               const gap = 20;
               const chartWidth = categories.length * (barWidth + gap);
-              const topPadding = 30; // Espacio superior para los números
+              const topPadding = 30;
 
               return categories.length === 0 ? (
                 <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
@@ -388,7 +443,7 @@ export default function Dashboard() {
                 </Typography>
               ) : (
                 <Box>
-                  {/* Gráfico SVG de Barras */}
+                  {/* Gráfico SVG de Barras Interactivo */}
                   <Box sx={{ overflowX: 'auto', mb: 2 }}>
                     <svg
                       width={chartWidth}
@@ -403,73 +458,106 @@ export default function Dashboard() {
                             y1={topPadding + chartHeight - (chartHeight * percent) / 100}
                             x2={chartWidth}
                             y2={topPadding + chartHeight - (chartHeight * percent) / 100}
-                            stroke="#e0e0e0"
+                            stroke={theme.palette.mode === 'dark' ? '#444' : '#e0e0e0'}
                             strokeWidth={1}
                             strokeDasharray="4,4"
                           />
                           <text
                             x={-5}
                             y={topPadding + chartHeight - (chartHeight * percent) / 100 + 4}
-                            fill="#999"
+                            fill={theme.palette.mode === 'dark' ? '#999' : '#666'}
                             fontSize={11}
                             textAnchor="end"
                           >
-                            {Math.round((maxSales * percent) / 100)}
+                            {sortBy === 'sales'
+                              ? Math.round((maxValue * percent) / 100)
+                              : `$${Math.round((maxValue * percent) / 100)}`}
                           </text>
                         </g>
                       ))}
 
-                      {/* Barras */}
+                      {/* Barras Interactivas */}
                       {categories.map(([category, data], index) => {
-                        const barHeight = (data.sales / maxSales) * chartHeight;
+                        const value = sortBy === 'sales' ? data.sales : data.revenue;
+                        const barHeight = (value / maxValue) * chartHeight;
                         const x = index * (barWidth + gap) + gap / 2;
                         const y = topPadding + chartHeight - barHeight;
+                        const isHovered = hoveredBar === category;
 
                         return (
                           <g key={category}>
-                            {/* Barra */}
+                            {/* Barra con hover effect */}
                             <rect
                               x={x}
                               y={y}
                               width={barWidth}
                               height={barHeight}
-                              fill="url(#gradient-primary)"
+                              fill={isHovered ? '#1565c0' : 'url(#gradient-primary)'}
                               rx={4}
-                            />
+                              style={{
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                filter: isHovered ? 'brightness(1.1)' : 'none',
+                              }}
+                              onMouseEnter={() => setHoveredBar(category)}
+                              onMouseLeave={() => setHoveredBar(null)}
+                            >
+                              <title>
+                                {`${category}\n${data.sales} ventas\n$${data.revenue.toFixed(2)} revenue\n${data.count} apps`}
+                              </title>
+                            </rect>
 
-                            {/* Valor encima */}
+                            {/* Valor encima con animación */}
                             <text
                               x={x + barWidth / 2}
                               y={y - 8}
-                              fill="#1976d2"
-                              fontSize={13}
+                              fill={isHovered ? '#0d47a1' : '#1976d2'}
+                              fontSize={isHovered ? 15 : 13}
                               fontWeight="bold"
                               textAnchor="middle"
+                              style={{ transition: 'all 0.3s ease' }}
                             >
-                              {data.sales}
+                              {sortBy === 'sales' ? data.sales : `$${data.revenue.toFixed(0)}`}
                             </text>
 
                             {/* Categoría debajo */}
                             <text
                               x={x + barWidth / 2}
                               y={topPadding + chartHeight + 20}
-                              fill={theme.palette.mode === 'dark' ? '#fff' : '#666'}
+                              fill={
+                                isHovered
+                                  ? theme.palette.primary.main
+                                  : theme.palette.mode === 'dark'
+                                    ? '#fff'
+                                    : '#666'
+                              }
                               fontSize={11}
-                              fontWeight="500"
+                              fontWeight={isHovered ? 600 : 500}
                               textAnchor="middle"
+                              style={{ transition: 'all 0.3s ease' }}
                             >
                               {category.substring(0, 10)}
                             </text>
 
-                            {/* Revenue debajo */}
+                            {/* Métrica secundaria debajo */}
                             <text
                               x={x + barWidth / 2}
                               y={topPadding + chartHeight + 35}
-                              fill={theme.palette.mode === 'dark' ? '#bbb' : '#999'}
-                              fontSize={10}
+                              fill={
+                                isHovered
+                                  ? theme.palette.primary.main
+                                  : theme.palette.mode === 'dark'
+                                    ? '#bbb'
+                                    : '#999'
+                              }
+                              fontSize={isHovered ? 11 : 10}
+                              fontWeight={isHovered ? 600 : 400}
                               textAnchor="middle"
+                              style={{ transition: 'all 0.3s ease' }}
                             >
-                              ${data.revenue.toFixed(0)}
+                              {sortBy === 'sales'
+                                ? `$${data.revenue.toFixed(0)}`
+                                : `${data.sales} ventas`}
                             </text>
                           </g>
                         );
@@ -485,14 +573,21 @@ export default function Dashboard() {
                     </svg>
                   </Box>
 
-                  {/* Leyenda */}
+                  {/* Leyenda Interactiva */}
                   <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
                     {categories.map(([category, data]) => (
                       <Chip
                         key={category}
                         label={`${category}: ${data.count} app${data.count > 1 ? 's' : ''}`}
                         size="small"
-                        variant="outlined"
+                        variant={hoveredBar === category ? 'filled' : 'outlined'}
+                        color={hoveredBar === category ? 'primary' : 'default'}
+                        onMouseEnter={() => setHoveredBar(category)}
+                        onMouseLeave={() => setHoveredBar(null)}
+                        sx={{
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                        }}
                       />
                     ))}
                   </Box>
@@ -505,11 +600,52 @@ export default function Dashboard() {
         {/* Gráfico de Barras Horizontales - Performance por App */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
-            <Box display="flex" alignItems="center" gap={1} mb={3}>
-              <TimelineIcon color="success" />
-              <Typography variant="h6" fontWeight={600}>
-                Revenue por App
-              </Typography>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <TimelineIcon color="success" />
+                <Typography variant="h6" fontWeight={600}>
+                  Revenue por App
+                </Typography>
+              </Box>
+              {/* Controles */}
+              <Box display="flex" gap={1} alignItems="center">
+                <Typography variant="caption" color="text.secondary">
+                  Mostrar:
+                </Typography>
+                {[3, 6, 10].map((n) => (
+                  <Chip
+                    key={n}
+                    label={`Top ${n}`}
+                    size="small"
+                    color={topN === n ? 'success' : 'default'}
+                    onClick={() => setTopN(n)}
+                    sx={{ cursor: 'pointer' }}
+                  />
+                ))}
+              </Box>
+            </Box>
+
+            {/* Filtro por categoría */}
+            <Box display="flex" gap={1} mb={2} flexWrap="wrap">
+              <Chip
+                label="Todas"
+                size="small"
+                color={selectedCategory === 'all' ? 'primary' : 'default'}
+                onClick={() => setSelectedCategory('all')}
+                sx={{ cursor: 'pointer' }}
+              />
+              {[
+                ...new Set(stats.allApps.map((app) => app.category)),
+              ].map((cat) => (
+                <Chip
+                  key={cat}
+                  label={cat}
+                  size="small"
+                  color={selectedCategory === cat ? 'primary' : 'default'}
+                  onClick={() => setSelectedCategory(cat)}
+                  sx={{ cursor: 'pointer' }}
+                />
+              ))}
             </Box>
 
             {stats.allApps.length === 0 ? (
@@ -519,93 +655,162 @@ export default function Dashboard() {
             ) : (
               <Box>
                 {(() => {
-                  const appsWithSales = stats.allApps
+                  // Filtrar por categoría si está seleccionada
+                  const filteredApps =
+                    selectedCategory === 'all'
+                      ? stats.allApps
+                      : stats.allApps.filter((app) => app.category === selectedCategory);
+
+                  const appsWithSales = filteredApps
                     .map((app) => {
-                      const sales = stats.topApps.find((t) => t.app.id === app.id)?.sales || 0;
-                      const revenue = sales * app.price;
-                      return { app, sales, revenue };
+                      const appData = stats.salesByApp.get(app.id) || { sales: 0, revenue: 0 };
+                      return {
+                        app,
+                        sales: appData.sales,
+                        revenue: appData.revenue,
+                      };
                     })
                     .sort((a, b) => b.revenue - a.revenue)
-                    .slice(0, 6);
+                    .slice(0, topN);
 
                   const maxRevenue = Math.max(...appsWithSales.map((a) => a.revenue), 1);
-                  const barHeight = 32;
-                  const gap = 16;
+                  const barHeight = 36;
+                  const gap = 12;
                   const chartHeight = appsWithSales.length * (barHeight + gap);
-                  const chartWidth = 400;
+                  const chartWidth = 500; // Ancho fijo más grande para evitar cortes
 
                   return (
                     <Box sx={{ overflowX: 'auto' }}>
                       <svg width={chartWidth} height={chartHeight} style={{ display: 'block' }}>
                         {appsWithSales.map((item, index) => {
-                          const barWidth = (item.revenue / maxRevenue) * (chartWidth - 120);
+                          const barWidth = Math.max(
+                            (item.revenue / maxRevenue) * (chartWidth - 180), // Más espacio para labels
+                            2
+                          );
                           const y = index * (barHeight + gap);
+                          const isHovered = hoveredApp === item.app.id;
 
-                          // Colores diferentes por índice
+                          // Colores diferentes por índice con efecto hover
                           const colors = [
-                            '#2e7d32',
-                            '#388e3c',
-                            '#43a047',
-                            '#4caf50',
-                            '#66bb6a',
-                            '#81c784',
+                            { normal: '#2e7d32', hover: '#1b5e20' },
+                            { normal: '#388e3c', hover: '#2e7d32' },
+                            { normal: '#43a047', hover: '#388e3c' },
+                            { normal: '#4caf50', hover: '#43a047' },
+                            { normal: '#66bb6a', hover: '#4caf50' },
+                            { normal: '#81c784', hover: '#66bb6a' },
+                            { normal: '#a5d6a7', hover: '#81c784' },
+                            { normal: '#c8e6c9', hover: '#a5d6a7' },
+                            { normal: '#1b5e20', hover: '#0d3d14' },
+                            { normal: '#2e7d32', hover: '#1b5e20' },
                           ];
-                          const color = colors[index % colors.length];
+                          const colorSet = colors[index % colors.length];
+                          const color = isHovered ? colorSet.hover : colorSet.normal;
 
                           return (
-                            <g key={item.app.id}>
-                              {/* Nombre de la app */}
+                            <g
+                              key={item.app.id}
+                              onMouseEnter={() => setHoveredApp(item.app.id)}
+                              onMouseLeave={() => setHoveredApp(null)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {/* Nombre de la app con hover effect */}
                               <text
                                 x={0}
                                 y={y + barHeight / 2 + 5}
-                                fill={theme.palette.mode === 'dark' ? '#fff' : '#333'}
-                                fontSize={12}
-                                fontWeight="500"
+                                fill={
+                                  isHovered
+                                    ? theme.palette.primary.main
+                                    : theme.palette.mode === 'dark'
+                                      ? '#fff'
+                                      : '#333'
+                                }
+                                fontSize={isHovered ? 13 : 12}
+                                fontWeight={isHovered ? 600 : 500}
+                                style={{ transition: 'all 0.3s ease' }}
                               >
                                 {item.app.name.substring(0, 15)}
                                 {item.app.name.length > 15 ? '...' : ''}
                               </text>
 
-                              {/* Barra */}
+                              {/* Barra con hover effect y animación */}
                               <rect
-                                x={120}
+                                x={130}
                                 y={y + 2}
-                                width={barWidth || 2}
+                                width={barWidth}
                                 height={barHeight - 4}
                                 fill={color}
-                                rx={3}
-                                opacity={0.85}
-                              />
+                                rx={4}
+                                style={{
+                                  transition: 'all 0.3s ease',
+                                  opacity: isHovered ? 1 : 0.85,
+                                  filter: isHovered ? 'brightness(1.1)' : 'none',
+                                }}
+                              >
+                                <title>
+                                  {`${item.app.name}\n${item.sales} ventas\n$${item.revenue.toFixed(2)} revenue`}
+                                </title>
+                              </rect>
 
-                              {/* Revenue */}
+                              {/* Revenue con hover effect */}
                               <text
-                                x={125 + barWidth + 5}
+                                x={135 + barWidth + 5}
                                 y={y + barHeight / 2 + 5}
                                 fill={color}
-                                fontSize={13}
+                                fontSize={isHovered ? 14 : 13}
                                 fontWeight="bold"
+                                style={{ transition: 'all 0.3s ease' }}
                               >
                                 ${item.revenue.toFixed(2)}
                               </text>
 
-                              {/* Ventas */}
-                              <text
-                                x={120}
-                                y={y + barHeight / 2 + 5}
-                                fill="#fff"
-                                fontSize={10}
-                                fontWeight="600"
-                                textAnchor="start"
-                                style={{ paddingLeft: '4px' }}
-                              >
-                                {item.sales > 0
-                                  ? `  ${item.sales} venta${item.sales > 1 ? 's' : ''}`
-                                  : ''}
-                              </text>
+                              {/* Ventas dentro de la barra */}
+                              {item.sales > 0 && barWidth > 60 && (
+                                <text
+                                  x={135}
+                                  y={y + barHeight / 2 + 5}
+                                  fill="#fff"
+                                  fontSize={10}
+                                  fontWeight="600"
+                                  textAnchor="start"
+                                  style={{ pointerEvents: 'none' }}
+                                >
+                                  {`  ${item.sales} venta${item.sales > 1 ? 's' : ''}`}
+                                </text>
+                              )}
+
+                              {/* Badge de categoría en hover */}
+                              {isHovered && (
+                                <text
+                                  x={0}
+                                  y={y + barHeight / 2 + 20}
+                                  fill={theme.palette.text.secondary}
+                                  fontSize={9}
+                                  fontStyle="italic"
+                                >
+                                  {item.app.category} • ${item.app.price}
+                                </text>
+                              )}
                             </g>
                           );
                         })}
                       </svg>
+
+                      {/* Resumen estadístico */}
+                      <Box
+                        mt={2}
+                        p={1.5}
+                        bgcolor={theme.palette.mode === 'dark' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.08)'}
+                        borderRadius={1}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          <strong>Total Revenue:</strong> $
+                          {appsWithSales.reduce((sum, item) => sum + item.revenue, 0).toFixed(2)}
+                          {' • '}
+                          <strong>Apps con ventas:</strong>{' '}
+                          {appsWithSales.filter((item) => item.sales > 0).length} de{' '}
+                          {stats.allApps.length}
+                        </Typography>
+                      </Box>
                     </Box>
                   );
                 })()}
