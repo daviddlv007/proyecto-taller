@@ -19,7 +19,7 @@ export default function Login() {
   const [form, setForm] = useState({
     correo: '',
     contrasena: '',
-    role: 'buyer' as 'vendor' | 'buyer',
+    role: 'usuario' as 'desarrollador' | 'usuario',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ export default function Login() {
     }
   };
 
-  const handleQuickLogin = async (email: string, password: string, role: 'vendor' | 'buyer') => {
+  const handleQuickLogin = async (email: string, password: string, role: 'desarrollador' | 'usuario') => {
     setError('');
     setLoading(true);
 
@@ -71,11 +71,11 @@ export default function Login() {
         <InputLabel>Tipo de cuenta</InputLabel>
         <Select
           value={form.role}
-          onChange={(e) => setForm({ ...form, role: e.target.value as 'vendor' | 'buyer' })}
+          onChange={(e) => setForm({ ...form, role: e.target.value as 'desarrollador' | 'usuario' })}
           label="Tipo de cuenta"
         >
-          <MenuItem value="buyer">Usuario</MenuItem>
-          <MenuItem value="vendor">Desarrollador</MenuItem>
+          <MenuItem value="usuario">Usuario</MenuItem>
+          <MenuItem value="desarrollador">Desarrollador</MenuItem>
         </Select>
       </FormControl>
 
@@ -129,7 +129,7 @@ export default function Login() {
           <Button
             variant="outlined"
             size="small"
-            onClick={() => handleQuickLogin('maria@techdev.com', '123456', 'vendor')}
+            onClick={() => handleQuickLogin('vendor@example.com', '123456', 'desarrollador')}
             disabled={loading}
           >
             Desarrollador Demo
@@ -137,7 +137,7 @@ export default function Login() {
           <Button
             variant="outlined"
             size="small"
-            onClick={() => handleQuickLogin('pedro@empresa.com', '123456', 'buyer')}
+            onClick={() => handleQuickLogin('buyer@example.com', '123456', 'usuario')}
             disabled={loading}
           >
             Usuario Demo

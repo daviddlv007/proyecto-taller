@@ -2,17 +2,17 @@ import React from 'react';
 import { useRoutes, Navigate } from 'react-router-dom';
 import { publicRoutes } from './features/public/routes';
 import { authRoutes } from './features/auth/routes';
-import { vendorRoutes } from './features/vendor/routes';
-import { buyerRoutes } from './features/buyer/routes';
+import { desarrolladorRoutes } from './features/desarrollador/routes';
+import { usuarioRoutes } from './features/usuario/routes';
 
 export default function AppRoutes() {
   const routes = [
     ...publicRoutes,
-    { path: '/vendor', element: <Navigate to="/vendor/dashboard" replace /> },
-    { path: '/buyer', element: <Navigate to="/buyer/home" replace /> },
+    { path: '/desarrollador', element: <Navigate to="/desarrollador/dashboard" replace /> },
+    { path: '/usuario', element: <Navigate to="/usuario/home" replace /> },
     ...authRoutes,
-    ...vendorRoutes,
-    ...buyerRoutes,
+    ...desarrolladorRoutes,
+    ...usuarioRoutes,
     { path: '*', element: <div>404 - Página no encontrada</div> },
   ];
 

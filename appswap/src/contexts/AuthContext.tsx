@@ -11,11 +11,11 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  role: 'vendor' | 'buyer' | null;
-  login: (correo: string, contrasena: string, role: 'vendor' | 'buyer') => Promise<boolean>;
+  role: 'desarrollador' | 'usuario' | null;
+  login: (correo: string, contrasena: string, role: 'desarrollador' | 'usuario') => Promise<boolean>;
   register: (
     userData: { correo: string; contrasena: string; nombre: string },
-    role: 'vendor' | 'buyer'
+    role: 'desarrollador' | 'usuario'
   ) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -25,7 +25,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<'vendor' | 'buyer' | null>(null);
+  const [role, setRole] = useState<'desarrollador' | 'usuario' | null>(null);
   const navigate = useNavigate();
 
   // Recuperar usuario y rol desde localStorage al montar el contexto
@@ -38,10 +38,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(userData);
         // Inferir rol desde la URL o usar lógica específica
         const currentPath = window.location.pathname;
-        if (currentPath.includes('/vendor')) {
-          setRole('vendor');
-        } else if (currentPath.includes('/buyer')) {
-          setRole('buyer');
+        if (currentPath.includes('/desarrollador')) {
+          setRole('desarrollador');
+        } else if (currentPath.includes('/usuario')) {
+          setRole('usuario');
         }
       } catch (error) {
         console.error('Error parsing user data:', error);
@@ -51,13 +51,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = async (correo: string, contrasena: string, selectedRole: 'vendor' | 'buyer') => {
+  const login = async (correo: string, contrasena: string, selectedRole: 'desarrollador' | 'usuario') => {
     const res = await api.login(correo, contrasena, selectedRole);
     if (res.success && res.token) {
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
       setUser(userData);
       setRole(selectedRole);
-      navigate(selectedRole === 'vendor' ? '/vendor/dashboard' : '/buyer/home');
+      navigate(selectedRole === 'desarrollador' ? '/desarrollador/dashboard' : '/usuario/home');
       return true;
     }
     return false;
@@ -65,13 +65,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (
     userData: { correo: string; contrasena: string; nombre: string },
-    selectedRole: 'vendor' | 'buyer'
+    selectedRole: 'desarrollador' | 'usuario'
   ) => {
     const res = await api.register(userData, selectedRole);
     if (res.success) {
       setUser(res.user);
       setRole(selectedRole);
-      navigate(selectedRole === 'vendor' ? '/vendor/dashboard' : '/buyer/home');
+      navigate(selectedRole === 'desarrollador' ? '/desarrollador/dashboard' : '/usuario/home');
       return true;
     }
     return false;

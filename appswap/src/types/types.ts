@@ -1,41 +1,41 @@
 export interface App {
   id: number;
-  name: string;
-  description: string;
-  category: string;
-  app_url: string;
-  cover_image?: string;
-  price: number;
-  demo_url?: string;
+  nombre: string;
+  descripcion: string;
+  categoria: string;
+  url_aplicacion: string;
+  imagen_portada?: string;
+  precio: number;
+  url_video?: string;
 }
 
 export interface Payment {
   id: number;
-  app_id: number;
-  buyer_id: number;
-  status: 'pending' | 'confirmed';
-  qr_code: string;
-  credentials?: string;
+  aplicacion_id: number;
+  comprador_id: number;
+  estado: 'pendiente' | 'confirmado';
+  codigo_qr: string;
+  credenciales?: string;
 }
 
 export interface Review {
   id: number;
-  app_id: number;
-  user_id: number;
-  rating: number;
-  comment: string;
+  aplicacion_id: number;
+  autor_id: number;
+  calificacion: number;
+  comentario: string;
 }
 
 export interface Stats {
   appId: number;
-  downloads: number;
-  reviews: number;
-  average_rating: number;
-  payments_received: number;
+  descargas: number;
+  resenas: number;
+  calificacion_promedio: number;
+  pagos_recibidos: number;
 }
 
 export interface Recommendation {
   id: number;
-  user_id: number;
+  usuario_id: number;
   idea: string;
 }

@@ -15,7 +15,7 @@ export const AppEmbedModal = ({ open, onClose, app }: AppEmbedModalProps) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {app.name}
+        {app.nombre}
         <IconButton onClick={onClose}>
           <CloseIcon />
         </IconButton>
@@ -23,11 +23,11 @@ export const AppEmbedModal = ({ open, onClose, app }: AppEmbedModalProps) => {
       <DialogContent sx={{ p: 0, height: '80vh' }}>
         <Box
           component="iframe"
-          src={app.app_url}
+          src={app.url_aplicacion}
           width="100%"
           height="100%"
           sx={{ border: 'none' }}
-          title={app.name}
+          title={app.nombre}
         />
       </DialogContent>
     </Dialog>

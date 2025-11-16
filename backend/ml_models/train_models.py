@@ -2,6 +2,8 @@
 Script para entrenar ambos modelos ML
 """
 
+import sys
+sys.path.append('..')
 from database import SessionLocal
 from ml_models.price_optimizer import PriceOptimizer
 from ml_models.recommender import AppRecommender

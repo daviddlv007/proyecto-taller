@@ -20,7 +20,7 @@ export default function Register() {
     correo: '',
     contrasena: '',
     nombre: '',
-    role: 'buyer' as 'vendor' | 'buyer',
+    role: 'usuario' as 'desarrollador' | 'usuario',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -66,11 +66,11 @@ export default function Register() {
         <InputLabel>Tipo de cuenta</InputLabel>
         <Select
           value={form.role}
-          onChange={(e) => setForm({ ...form, role: e.target.value as 'vendor' | 'buyer' })}
+          onChange={(e) => setForm({ ...form, role: e.target.value as 'desarrollador' | 'usuario' })}
           label="Tipo de cuenta"
         >
-          <MenuItem value="buyer">Usuario</MenuItem>
-          <MenuItem value="vendor">Desarrollador</MenuItem>
+          <MenuItem value="usuario">Usuario</MenuItem>
+          <MenuItem value="desarrollador">Desarrollador</MenuItem>
         </Select>
       </FormControl>
 

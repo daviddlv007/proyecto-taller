@@ -33,30 +33,29 @@ class PriceOptimizer:
         for app in apps:
             # Calcular estadísticas
             total_sales = db.query(func.count(Payment.id))\
-                .filter(Payment.app_id == app.id, Payment.status == 'confirmed')\
+                .filter(Payment.aplicacion_id == app.id, Payment.estado == 'confirmado')\
                 .scalar() or 0
             
-            avg_rating = db.query(func.avg(Review.rating))\
-                .filter(Review.app_id == app.id)\
+            avg_rating = db.query(func.avg(Review.calificacion))\
+                .filter(Review.aplicacion_id == app.id)\
                 .scalar() or 3.0
             
             # Ventas último mes
             month_ago = datetime.now() - timedelta(days=30)
             recent_sales = db.query(func.count(Payment.id))\
-                .filter(Payment.app_id == app.id, 
-                       Payment.status == 'confirmed',
-                       Payment.created_at >= month_ago)\
+                .filter(Payment.aplicacion_id == app.id, 
+                       Payment.estado == 'confirmado',
+                       Payment.fecha_creacion >= month_ago)\
                 .scalar() or 0
             
-            # Precio promedio de la competencia (misma categoría)
-            competitor_avg_price = db.query(func.avg(App.price))\
-                .filter(App.category == app.category, App.id != app.id)\
-                .scalar() or app.price
+            competitor_avg_price = db.query(func.avg(App.precio))\
+                .filter(App.categoria_id == app.categoria_id, App.id != app.id)\
+                .scalar() or app.precio
             
             data.append({
                 'app_id': app.id,
-                'category': app.category,
-                'current_price': app.price,
+                'category': app.categoria_obj.nombre,
+                'current_price': app.precio,
                 'total_sales': total_sales,
                 'recent_sales': recent_sales,
                 'avg_rating': float(avg_rating),
@@ -74,7 +73,6 @@ class PriceOptimizer:
             print("❌ Insuficientes datos para entrenar (mínimo 10 apps)")
             return False
         
-        # Features
         self.category_encoder.fit(df['category'])
         df['category_encoded'] = self.category_encoder.transform(df['category'])
         
@@ -121,26 +119,25 @@ class PriceOptimizer:
         
         # Calcular features actuales
         total_sales = db.query(func.count(Payment.id))\
-            .filter(Payment.app_id == app.id, Payment.status == 'confirmed')\
+            .filter(Payment.aplicacion_id == app.id, Payment.estado == 'confirmado')\
             .scalar() or 0
         
         month_ago = datetime.now() - timedelta(days=30)
         recent_sales = db.query(func.count(Payment.id))\
-            .filter(Payment.app_id == app.id, 
-                   Payment.status == 'confirmed',
-                   Payment.created_at >= month_ago)\
+            .filter(Payment.aplicacion_id == app.id, 
+                   Payment.estado == 'confirmado',
+                   Payment.fecha_creacion >= month_ago)\
             .scalar() or 0
         
-        avg_rating = db.query(func.avg(Review.rating))\
-            .filter(Review.app_id == app.id)\
+        avg_rating = db.query(func.avg(Review.calificacion))\
+            .filter(Review.aplicacion_id == app.id)\
             .scalar() or 3.0
         
-        competitor_avg_price = db.query(func.avg(App.price))\
-            .filter(App.category == app.category, App.id != app.id)\
-            .scalar() or app.price
+        competitor_avg_price = db.query(func.avg(App.precio))\
+            .filter(App.categoria_id == app.categoria_id, App.id != app.id)\
+            .scalar() or app.precio
         
-        # Preparar features
-        category_encoded = self.category_encoder.transform([app.category])[0]
+        category_encoded = self.category_encoder.transform([app.categoria_obj.nombre])[0]
         features = np.array([[
             category_encoded,
             total_sales,
@@ -149,22 +146,18 @@ class PriceOptimizer:
             float(competitor_avg_price)
         ]])
         
-        # Predecir
         suggested_price = self.model.predict(features)[0]
         
-        # Calcular confianza (basada en distancia al precio actual)
-        price_diff = abs(suggested_price - app.price)
-        confidence = max(0.5, 1.0 - (price_diff / app.price))
+        price_diff = abs(suggested_price - app.precio)
+        confidence = max(0.5, 1.0 - (price_diff / app.precio))
         
-        # Calcular impacto estimado
-        if suggested_price > app.price:
-            impact = f"+{((suggested_price / app.price - 1) * 100):.0f}% ingresos potenciales"
-        elif suggested_price < app.price:
-            impact = f"+{((app.price / suggested_price - 1) * 30):.0f}% ventas estimadas"
+        if suggested_price > app.precio:
+            impact = f"+{((suggested_price / app.precio - 1) * 100):.0f}% ingresos potenciales"
+        elif suggested_price < app.precio:
+            impact = f"+{((app.precio / suggested_price - 1) * 30):.0f}% ventas estimadas"
         else:
             impact = "Precio actual es óptimo"
         
-        # Razón
         if avg_rating >= 4.5:
             reason = f"Alto rating ({avg_rating:.1f}⭐) justifica precio premium"
         elif recent_sales > 5:
@@ -175,7 +168,7 @@ class PriceOptimizer:
             reason = f"Basado en análisis de mercado y demanda"
         
         return {
-            'current_price': round(app.price, 2),
+            'current_price': round(app.precio, 2),
             'suggested_price': round(max(5.0, suggested_price), 2),  # Mínimo $5
             'confidence': round(confidence, 2),
             'impact': impact,

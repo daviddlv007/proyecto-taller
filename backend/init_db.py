@@ -16,28 +16,28 @@ def init_db():
         correo="vendor@example.com",
         nombre="Juan Vendedor",
         contrasena=get_password_hash("123456"),
-        role="vendor"
+        rol="desarrollador"
     )
     
     vendor2 = User(
         correo="maria@vendor.com",
         nombre="Maria García",
         contrasena=get_password_hash("123456"),
-        role="vendor"
+        rol="desarrollador"
     )
     
     buyer1 = User(
         correo="buyer@example.com",
         nombre="Ana Compradora",
         contrasena=get_password_hash("123456"),
-        role="buyer"
+        rol="usuario"
     )
     
     buyer2 = User(
         correo="pedro@buyer.com",
         nombre="Pedro López",
         contrasena=get_password_hash("123456"),
-        role="buyer"
+        rol="usuario"
     )
     
     db.add_all([vendor1, vendor2, buyer1, buyer2])

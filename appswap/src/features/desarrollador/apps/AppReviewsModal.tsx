@@ -37,8 +37,8 @@ export const AppReviewsModal = ({ open, onClose, appId }: AppReviewsModalProps) 
           reviews.map((r) => (
             <Box key={r.id} mb={2} p={1} sx={{ borderBottom: '1px solid #eee' }}>
               <Typography variant="subtitle2">Usuario {r.userId}</Typography>
-              <Typography variant="body2">Rating: {r.rating} / 5</Typography>
-              <Typography variant="body2">{r.comment}</Typography>
+              <Typography variant="body2">Rating: {r.calificacion} / 5</Typography>
+              <Typography variant="body2">{r.comentario}</Typography>
             </Box>
           ))
         )}

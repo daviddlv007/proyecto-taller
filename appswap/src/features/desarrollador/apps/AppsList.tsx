@@ -46,7 +46,7 @@ export const AppsList = () => {
           Mis Apps
         </Typography>
         <Tooltip title="Crear nueva app">
-          <IconButton color="primary" onClick={() => navigate('/vendor/apps/new')}>
+          <IconButton color="primary" onClick={() => navigate('/desarrollador/apps/new')}>
             <AddCircleOutlineIcon fontSize="large" />
           </IconButton>
         </Tooltip>

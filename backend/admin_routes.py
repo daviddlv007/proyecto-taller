@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db, User, App, Payment, Review, Base, engine
+from database import get_db, User, App, Payment, Review, Rol, Categoria, Base, engine
 from auth import get_password_hash
 from datetime import datetime, timedelta
 import random
@@ -16,13 +16,25 @@ def seed_database(db: Session = Depends(get_db)):
     Poblar la base de datos con datos de demostración (60 apps, 25 usuarios, 120 compras, 50 reviews)
     """
     try:
-        # Verificar si ya hay datos
         existing_users = db.query(User).count()
         if existing_users > 5:
             raise HTTPException(status_code=400, detail="La base de datos ya contiene datos. Usa /admin/clear-db primero.")
         
-        # USUARIOS
+        rol_desarrollador = db.query(Rol).filter(Rol.nombre == "desarrollador").first()
+        if not rol_desarrollador:
+            rol_desarrollador = Rol(nombre="desarrollador")
+            db.add(rol_desarrollador)
+            db.flush()
+        
+        rol_usuario = db.query(Rol).filter(Rol.nombre == "usuario").first()
+        if not rol_usuario:
+            rol_usuario = Rol(nombre="usuario")
+            db.add(rol_usuario)
+            db.flush()
+        
         vendors_data = [
+            ("Juan Vendedor", "vendor@example.com"),
+            ("María García", "maria@vendor.com"),
             ("María García", "maria@techdev.com"),
             ("Carlos López", "carlos@innovaapps.com"),
             ("Ana Martínez", "ana@softwarepro.com"),
@@ -36,6 +48,8 @@ def seed_database(db: Session = Depends(get_db)):
         ]
         
         buyers_data = [
+            ("Ana Compradora", "buyer@example.com"),
+            ("Pedro López", "pedro@buyer.com"),
             ("Pedro González", "pedro@empresa.com"),
             ("Lucía Fernández", "lucia@startup.com"),
             ("Miguel Ángel", "miguel@freelance.com"),
@@ -57,7 +71,7 @@ def seed_database(db: Session = Depends(get_db)):
                 nombre=nombre,
                 correo=correo,
                 contrasena=get_password_hash("123456"),
-                role="vendor"
+                rol_id=rol_desarrollador.id
             )
             db.add(user)
             vendors.append(user)
@@ -68,15 +82,22 @@ def seed_database(db: Session = Depends(get_db)):
                 nombre=nombre,
                 correo=correo,
                 contrasena=get_password_hash("123456"),
-                role="buyer"
+                rol_id=rol_usuario.id
             )
             db.add(user)
             buyers.append(user)
         
         db.commit()
         
-        # APPS (60 apps, 10 por categoría)
-        categories = ["Productividad", "Finanzas", "Marketing", "Educación", "Diseño", "Desarrollo"]
+        categories = ["Productividad", "Finanzas", "Marketing", "Educacion", "Diseno", "Desarrollo"]
+        categorias_cache = {}
+        for cat_nombre in categories:
+            cat_obj = db.query(Categoria).filter(Categoria.nombre == cat_nombre).first()
+            if not cat_obj:
+                cat_obj = Categoria(nombre=cat_nombre)
+                db.add(cat_obj)
+                db.flush()
+            categorias_cache[cat_nombre] = cat_obj
         
         apps_data = [
             # Productividad
@@ -154,19 +175,19 @@ def seed_database(db: Session = Depends(get_db)):
         
         apps = []
         for idx, (name, desc, price, url, demo) in enumerate(apps_data):
-            category = categories[idx // 10]  # 10 apps por categoría
-            vendor = vendors[idx % len(vendors)]  # Distribuir entre vendors
+            category = categories[idx // 10]
+            vendor = vendors[idx % len(vendors)]
             
             app = App(
-                name=name,
-                description=desc,
-                category=category,
-                app_url=url,
-                demo_url=demo,
-                owner_id=vendor.id,
-                price=price,
-                cover_image=f"https://picsum.photos/seed/{idx+100}/400/300",
-                credentials_template=json.dumps({
+                nombre=name,
+                descripcion=desc,
+                categoria_id=categorias_cache[category].id,
+                url_aplicacion=url,
+                url_video=demo,
+                propietario_id=vendor.id,
+                precio=price,
+                imagen_portada=f"https://picsum.photos/seed/{idx+100}/400/300",
+                plantilla_credenciales=json.dumps({
                     "username": f"user_{idx+1}",
                     "password": "demo123",
                     "api_key": f"sk-{random.randint(100000, 999999)}"
@@ -196,19 +217,19 @@ def seed_database(db: Session = Depends(get_db)):
             })
             
             payment = Payment(
-                app_id=app.id,
-                buyer_id=buyer.id,
-                status="confirmed",
-                qr_code=f"QR-{random.randint(100000, 999999)}",
-                credentials=credentials,
-                created_at=purchase_date
+                aplicacion_id=app.id,
+                comprador_id=buyer.id,
+                estado="confirmado",
+                codigo_qr=f"QR-{random.randint(100000, 999999)}",
+                credenciales=credentials,
+                fecha_creacion=purchase_date
             )
             db.add(payment)
         
         db.commit()
         
         # REVIEWS (50 reviews con distribución realista de ratings)
-        confirmed_payments = db.query(Payment).filter(Payment.status == "confirmed").limit(50).all()
+        confirmed_payments = db.query(Payment).filter(Payment.estado == "confirmado").limit(50).all()
         
         rating_distribution = [5]*17 + [4]*15 + [3]*10 + [2]*5 + [1]*3  # 35% 5★, 30% 4★, 20% 3★, 10% 2★, 5% 1★
         random.shuffle(rating_distribution)
@@ -243,15 +264,104 @@ def seed_database(db: Session = Depends(get_db)):
                 comment = random.choice(comments_negative)
             
             review = Review(
-                app_id=payment.app_id,
-                user_id=payment.buyer_id,
-                rating=rating_value,
-                comment=comment,
-                created_at=payment.created_at + timedelta(days=random.randint(1, 7))
+                aplicacion_id=payment.aplicacion_id,
+                autor_id=payment.comprador_id,
+                calificacion=rating_value,
+                comentario=comment,
+                fecha_creacion=payment.fecha_creacion + timedelta(days=random.randint(1, 7))
             )
             db.add(review)
         
         db.commit()
+        
+        # DATOS EXTRAS PARA USUARIOS DE PRUEBA (PRESENTACION)
+        test_vendor = db.query(User).filter(User.correo == "vendor@example.com").first()
+        test_buyer = db.query(User).filter(User.correo == "buyer@example.com").first()
+        
+        if test_vendor and test_buyer:
+            vendor_apps = db.query(App).filter(App.propietario_id == test_vendor.id).all()
+            
+            # MUCHAS MAS VENTAS para el vendor de prueba (80 compras adicionales)
+            for _ in range(80):
+                app = random.choice(vendor_apps) if vendor_apps else random.choice(apps)
+                buyer_random = random.choice(buyers)
+                days_ago = random.randint(1, 180)
+                purchase_date = datetime.now() - timedelta(days=days_ago)
+                
+                credentials = json.dumps({
+                    "username": f"user_{random.randint(1000, 9999)}",
+                    "password": f"pwd{random.randint(1000, 9999)}",
+                    "api_key": f"ak-{random.randint(100000000, 999999999)}"
+                })
+                
+                payment = Payment(
+                    aplicacion_id=app.id,
+                    comprador_id=buyer_random.id,
+                    estado="confirmado",
+                    codigo_qr=f"QR-{random.randint(100000, 999999)}",
+                    credenciales=credentials,
+                    fecha_creacion=purchase_date
+                )
+                db.add(payment)
+                
+                # 85% tienen review para tener muchos datos
+                if random.random() < 0.85:
+                    rating = random.choices([5,4,3,2,1], weights=[45,30,15,7,3])[0]
+                    comments = {
+                        5: ["Excelente app, muy profesional", "La mejor de su categoria", "100% recomendada", "Increible calidad", "Superó mis expectativas"],
+                        4: ["Muy buena aplicacion", "Funciona perfectamente", "Gran herramienta", "Muy recomendable", "Buena compra"],
+                        3: ["Cumple su funcion", "Aceptable", "Normal", "Esta bien", "Podria mejorar"],
+                        2: ["Le falta mejorar", "Tiene bugs", "No es lo que esperaba", "Regular", "Decepcionante"],
+                        1: ["Mala experiencia", "No funciona bien", "Decepcionante", "No vale la pena", "Pesima"]
+                    }
+                    
+                    review = Review(
+                        aplicacion_id=app.id,
+                        autor_id=buyer_random.id,
+                        calificacion=rating,
+                        comentario=random.choice(comments[rating]),
+                        fecha_creacion=purchase_date + timedelta(days=random.randint(1, 5))
+                    )
+                    db.add(review)
+            
+            # El buyer de prueba tiene 25 compras variadas (más datos)
+            for _ in range(25):
+                app = random.choice(apps)
+                days_ago = random.randint(1, 120)
+                purchase_date = datetime.now() - timedelta(days=days_ago)
+                
+                credentials = json.dumps({
+                    "username": f"ana_user_{app.id}",
+                    "password": f"pwd{random.randint(1000, 9999)}",
+                    "api_key": f"ak-{random.randint(100000000, 999999999)}"
+                })
+                
+                payment = Payment(
+                    aplicacion_id=app.id,
+                    comprador_id=test_buyer.id,
+                    estado="confirmado",
+                    codigo_qr=f"QR-{random.randint(100000, 999999)}",
+                    credenciales=credentials,
+                    fecha_creacion=purchase_date
+                )
+                db.add(payment)
+                
+                # 60% tienen review del buyer de prueba
+                if random.random() < 0.6:
+                    rating = random.choices([5,4,3], weights=[50,35,15])[0]
+                    review = Review(
+                        aplicacion_id=app.id,
+                        autor_id=test_buyer.id,
+                        calificacion=rating,
+                        comentario=f"Review de prueba - Rating {rating}",
+                        fecha_creacion=purchase_date + timedelta(days=random.randint(1, 3))
+                    )
+                    db.add(review)
+            
+            db.commit()
+        
+        total_purchases = db.query(Payment).count()
+        total_reviews = db.query(Review).count()
         
         return {
             "message": "✅ Base de datos poblada exitosamente",
@@ -259,8 +369,8 @@ def seed_database(db: Session = Depends(get_db)):
             "vendors": len(vendors),
             "buyers": len(buyers),
             "apps": len(apps),
-            "purchases": 120,
-            "reviews": 50
+            "purchases": total_purchases,
+            "reviews": total_reviews
         }
         
     except Exception as e:
@@ -306,7 +416,6 @@ def reset_all(db: Session = Depends(get_db)):
     un ambiente completamente fresco con ML funcionando.
     """
     try:
-        # PASO 1: Limpiar base de datos
         print("=" * 60)
         print("🧹 PASO 1/4: LIMPIANDO BASE DE DATOS")
         print("=" * 60)
@@ -314,6 +423,8 @@ def reset_all(db: Session = Depends(get_db)):
         db.query(Payment).delete()
         db.query(App).delete()
         db.query(User).delete()
+        db.query(Categoria).delete()
+        db.query(Rol).delete()
         db.commit()
         print("✅ Base de datos limpiada")
         

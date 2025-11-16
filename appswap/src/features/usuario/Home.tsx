@@ -103,7 +103,7 @@ export default function Home() {
       {/* Tarjetas de resumen */}
       <Grid container spacing={3} mb={4}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card sx={{ cursor: 'pointer' }} onClick={() => navigate('/buyer/purchases')}>
+          <Card sx={{ cursor: 'pointer' }} onClick={() => navigate('/usuario/purchases')}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -121,7 +121,7 @@ export default function Home() {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card sx={{ cursor: 'pointer' }} onClick={() => navigate('/buyer/apps')}>
+          <Card sx={{ cursor: 'pointer' }} onClick={() => navigate('/usuario/apps')}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -149,14 +149,14 @@ export default function Home() {
                 Últimas Apps Compradas
               </Typography>
             </Box>
-            <Button variant="text" onClick={() => navigate('/buyer/purchases')} size="small">
+            <Button variant="text" onClick={() => navigate('/usuario/purchases')} size="small">
               Ver todas
             </Button>
           </Box>
 
           <Grid container spacing={2}>
             {recentPurchases.map((purchase) => (
-              <Grid size={{ xs: 12, sm: 4 }} key={purchase.app_id}>
+              <Grid size={{ xs: 12, sm: 4 }} key={purchase.id}>
                 <Card
                   sx={{
                     cursor: 'pointer',
@@ -208,7 +208,7 @@ export default function Home() {
             </Box>
             <Button
               variant="outlined"
-              onClick={() => navigate('/buyer/apps')}
+              onClick={() => navigate('/usuario/apps')}
               size="small"
               sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.3)' }}
             >
@@ -225,30 +225,30 @@ export default function Home() {
                     transition: 'transform 0.2s',
                     '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 },
                   }}
-                  onClick={() => navigate('/buyer/apps')}
+                  onClick={() => navigate('/usuario/apps')}
                 >
                   <CardMedia
                     component="img"
                     height="140"
-                    image={app.cover_image || 'https://via.placeholder.com/300x140?text=App'}
-                    alt={app.name}
+                    image={app.imagen_portada || 'https://via.placeholder.com/300x140?text=App'}
+                    alt={app.nombre}
                     sx={{ objectFit: 'cover' }}
                   />
                   <CardContent>
                     <Typography variant="h6" gutterBottom fontWeight="bold" noWrap>
-                      {app.name}
+                      {app.nombre}
                     </Typography>
-                    <Chip label={app.category} size="small" color="primary" sx={{ mb: 1 }} />
+                    <Chip label={app.categoria} size="small" color="primary" sx={{ mb: 1 }} />
                     <Typography
                       variant="body2"
                       color="text.secondary"
                       sx={{ mb: 1, height: 40, overflow: 'hidden' }}
                     >
-                      {app.description}
+                      {app.descripcion}
                     </Typography>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                       <Typography variant="h6" color="primary.main" fontWeight="bold">
-                        ${app.price.toFixed(2)}
+                        ${(app.precio || 0).toFixed(2)}
                       </Typography>
                     </Box>
                   </CardContent>
@@ -268,7 +268,7 @@ export default function Home() {
               Apps Destacadas
             </Typography>
           </Box>
-          <Button variant="text" onClick={() => navigate('/buyer/apps')} size="small">
+          <Button variant="text" onClick={() => navigate('/usuario/apps')} size="small">
             Ver todas las apps
           </Button>
         </Box>
@@ -290,20 +290,20 @@ export default function Home() {
                     transition: 'transform 0.2s',
                     '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 },
                   }}
-                  onClick={() => navigate('/buyer/apps')}
+                  onClick={() => navigate('/usuario/apps')}
                 >
                   <CardMedia
                     component="img"
                     height="140"
-                    image={app.cover_image || 'https://via.placeholder.com/300x140?text=App'}
-                    alt={app.name}
+                    image={app.imagen_portada || 'https://via.placeholder.com/300x140?text=App'}
+                    alt={app.nombre}
                     sx={{ objectFit: 'cover' }}
                   />
                   <CardContent>
                     <Typography variant="h6" gutterBottom fontWeight="bold" noWrap>
-                      {app.name}
+                      {app.nombre}
                     </Typography>
-                    <Chip label={app.category} color="primary" size="small" />
+                    <Chip label={app.categoria} color="primary" size="small" />
                   </CardContent>
                 </Card>
               </Grid>

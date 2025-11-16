@@ -78,7 +78,7 @@ export default function PriceSuggestions({ apps }: PriceSuggestionsProps) {
         {apps.map((app) => (
           <Chip
             key={app.id}
-            label={app.name}
+            label={app.nombre}
             onClick={() => setSelectedAppId(app.id)}
             color={selectedAppId === app.id ? 'primary' : 'default'}
             variant={selectedAppId === app.id ? 'filled' : 'outlined'}

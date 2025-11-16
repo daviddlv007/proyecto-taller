@@ -41,16 +41,16 @@ export const AppCard = ({ app, onEdit, onDelete }: AppCardProps) => {
       <Card sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Box
           component="img"
-          src={app.cover_image || 'https://via.placeholder.com/300x180?text=No+Image'}
-          alt={app.name}
+          src={app.imagen_portada || 'https://via.placeholder.com/300x180?text=No+Image'}
+          alt={app.nombre}
           sx={{ width: '100%', height: 180, objectFit: 'cover' }}
         />
         <CardContent sx={{ flexGrow: 1 }}>
-          <Typography variant="h6">{app.name}</Typography>
+          <Typography variant="h6">{app.nombre}</Typography>
           <Typography variant="body2" color="text.secondary">
-            {app.category}
+            {app.categoria}
           </Typography>
-          <Typography variant="body2">{app.description}</Typography>
+          <Typography variant="body2">{app.descripcion}</Typography>
         </CardContent>
 
         <CardActions sx={{ justifyContent: 'flex-end', px: 1, py: 0 }}>
@@ -107,7 +107,7 @@ export const AppCard = ({ app, onEdit, onDelete }: AppCardProps) => {
       {confirmDelete && (
         <ConfirmDeleteModal
           open={confirmDelete}
-          itemName={`la app "${app.name}"`}
+          itemName={`la app "${app.nombre}"`}
           onCancel={() => setConfirmDelete(false)}
           onConfirm={() => {
             onDelete(app.id);

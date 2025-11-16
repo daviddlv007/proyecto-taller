@@ -1,5 +1,5 @@
 import React from 'react';
-import LayoutVendor from '../../components/LayoutVendor';
+import LayoutDesarrollador from '../../components/LayoutDesarrollador';
 import Dashboard from './Dashboard';
 import { AppsList } from './apps/AppsList';
 import { AppForm } from './apps/AppForm';
@@ -11,10 +11,10 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import type { RouteObject } from 'react-router-dom';
 
-export const vendorRoutes: RouteObject[] = [
+export const desarrolladorRoutes: RouteObject[] = [
   {
-    path: '/vendor',
-    element: <LayoutVendor />,
+    path: '/desarrollador',
+    element: <LayoutDesarrollador />,
     children: [
       // Dashboard (página principal)
       {
@@ -61,4 +61,4 @@ export const vendorRoutes: RouteObject[] = [
   },
 ];
 
-export default vendorRoutes;
+export default desarrolladorRoutes;

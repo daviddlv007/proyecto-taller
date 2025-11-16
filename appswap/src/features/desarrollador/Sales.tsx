@@ -42,7 +42,7 @@ function Sales() {
     queryKey: ['vendor-sales'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/vendor/sales', {
+      const response = await fetch('http://localhost:8000/desarrollador/sales', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -52,8 +52,8 @@ function Sales() {
     },
   });
 
-  const formatCurrency = (amount: number) => {
-    return `$${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number | undefined) => {
+    return `$${(amount || 0).toFixed(2)}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -148,7 +148,7 @@ function Sales() {
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={formatCurrency(sale.price)} color="success" size="small" />
+                        <Chip label={formatCurrency(sale.precio)} color="success" size="small" />
                       </TableCell>
                       <TableCell align="center">
                         <Typography variant="caption" color="text.secondary">

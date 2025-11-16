@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom';
-import LayoutBuyer from '../../components/LayoutBuyer';
+import LayoutUsuario from '../../components/LayoutUsuario';
 import Home from './Home';
 import Apps from './Apps';
 import Purchases from './Purchases';
@@ -9,10 +9,10 @@ import AppsIcon from '@mui/icons-material/Apps';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 
-export const buyerRoutes: RouteObject[] = [
+export const usuarioRoutes: RouteObject[] = [
   {
-    path: '/buyer',
-    element: <LayoutBuyer />,
+    path: '/usuario',
+    element: <LayoutUsuario />,
     children: [
       {
         path: 'home',
@@ -38,4 +38,4 @@ export const buyerRoutes: RouteObject[] = [
   },
 ];
 
-export default buyerRoutes;
+export default usuarioRoutes;

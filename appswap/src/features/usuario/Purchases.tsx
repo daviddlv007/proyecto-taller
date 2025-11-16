@@ -63,7 +63,7 @@ function Purchases() {
     queryKey: ['myReviews'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/buyer/reviews', {
+      const response = await fetch('http://localhost:8000/usuario/reviews', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -76,7 +76,7 @@ function Purchases() {
   const createReviewMutation = useMutation({
     mutationFn: async (data: { app_id: number; rating: number; comment: string }) => {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/buyer/reviews', {
+      const response = await fetch('http://localhost:8000/usuario/reviews', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +180,7 @@ function Purchases() {
       ) : (
         <Grid container spacing={2}>
           {purchases.map((purchase) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={purchase.app_id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={purchase.id}>
               <Card
                 sx={{
                   transition: 'transform 0.2s, box-shadow 0.2s',
@@ -462,10 +462,10 @@ function Purchases() {
           {selectedPurchase && (
             <Box>
               {/* Imagen de la app */}
-              {selectedPurchase.cover_image && (
+              {selectedPurchase.imagen_portada && (
                 <Box
                   component="img"
-                  src={selectedPurchase.cover_image}
+                  src={selectedPurchase.imagen_portada}
                   alt={selectedPurchase.app_name}
                   sx={{
                     width: '100%',
@@ -485,7 +485,7 @@ function Purchases() {
               <Box display="flex" gap={1} mb={2}>
                 <Chip label={selectedPurchase.app_category} color="primary" />
                 <Chip
-                  label={`$${selectedPurchase.price.toFixed(2)}`}
+                  label={`$${(selectedPurchase.price || 0).toFixed(2)}`}
                   color="success"
                   variant="outlined"
                 />

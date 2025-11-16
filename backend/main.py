@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import vendor_routes
-import buyer_routes
+import rutas_desarrollador
+import rutas_usuario
 import ml_endpoints
 import admin_routes
 
@@ -28,8 +28,8 @@ app.add_middleware(
 )
 
 # Incluir rutas
-app.include_router(vendor_routes.router)
-app.include_router(buyer_routes.router)
+app.include_router(rutas_desarrollador.router)
+app.include_router(rutas_usuario.router)
 app.include_router(ml_endpoints.router)
 app.include_router(admin_routes.router)
 

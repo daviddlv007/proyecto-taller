@@ -20,98 +20,98 @@ class UserResponse(BaseModel):
 
 # App DTOs
 class AppCreateDTO(BaseModel):
-    name: str
-    description: str
-    category: str
-    app_url: str
-    cover_image: Optional[str] = None
-    price: float = 0.0
-    demo_url: Optional[str] = None
-    credentials_template: Optional[str] = None
+    nombre: str
+    descripcion: str
+    categoria: str
+    url_aplicacion: str
+    imagen_portada: Optional[str] = None
+    precio: float = 0.0
+    url_video: Optional[str] = None
+    plantilla_credenciales: Optional[str] = None
 
 class AppUpdateDTO(BaseModel):
-    name: str
-    description: str
-    app_url: str
-    cover_image: Optional[str] = None
-    price: Optional[float] = None
-    demo_url: Optional[str] = None
-    credentials_template: Optional[str] = None
+    nombre: str
+    descripcion: str
+    url_aplicacion: str
+    imagen_portada: Optional[str] = None
+    precio: Optional[float] = None
+    url_video: Optional[str] = None
+    plantilla_credenciales: Optional[str] = None
 
 class AppResponse(BaseModel):
     id: int
-    name: str
-    description: str
-    category: str
-    app_url: str
-    owner_id: Optional[int] = None
-    cover_image: Optional[str] = None
-    price: float = 0.0
-    demo_url: Optional[str] = None
+    nombre: str
+    descripcion: str
+    categoria: str
+    url_aplicacion: str
+    propietario_id: Optional[int] = None
+    imagen_portada: Optional[str] = None
+    precio: float = 0.0
+    url_video: Optional[str] = None
 
 class AppsListResponse(BaseModel):
-    apps: List[AppResponse]
+    aplicaciones: List[AppResponse]
 
 # Payment DTOs
 class PaymentCreateDTO(BaseModel):
-    app_id: int
-    qr_code: str
+    aplicacion_id: int
+    codigo_qr: str
 
 class PaymentUpdateDTO(BaseModel):
-    status: str
+    estado: str
 
 class PaymentResponse(BaseModel):
     id: int
-    app_id: int
-    buyer_id: int
-    status: str
-    qr_code: str
-    credentials: Optional[str] = None
+    aplicacion_id: int
+    comprador_id: int
+    estado: str
+    codigo_qr: str
+    credenciales: Optional[str] = None
 
 # Review DTOs
 class ReviewCreateDTO(BaseModel):
-    app_id: int
-    rating: int
-    comment: str
+    aplicacion_id: int
+    calificacion: int
+    comentario: str
 
 class ReviewResponse(BaseModel):
     id: int
-    app_id: int
-    user_id: int
-    rating: int
-    comment: str
+    aplicacion_id: int
+    autor_id: int
+    calificacion: int
+    comentario: str
 
 # Stats DTOs
 class StatsResponse(BaseModel):
-    downloads: int
-    reviews: int
-    average_rating: float
-    payments_received: float
+    descargas: int
+    resenas: int
+    calificacion_promedio: float
+    pagos_recibidos: float
 
 # Purchase DTOs
 class PurchaseResponse(BaseModel):
     id: int
-    app_id: int
-    app_name: str
-    app_category: str
-    app_description: str
-    app_url: str
-    cover_image: Optional[str] = None
-    price: float = 0.0
-    credentials: Optional[str] = None
-    purchase_date: str
+    aplicacion_id: int
+    nombre_aplicacion: str
+    categoria_aplicacion: str
+    descripcion_aplicacion: str
+    url_aplicacion: str
+    imagen_portada: Optional[str] = None
+    precio: float = 0.0
+    credenciales: Optional[str] = None
+    fecha_compra: str
 
 class PurchasesListResponse(BaseModel):
-    purchases: List[PurchaseResponse]
+    compras: List[PurchaseResponse]
 
 # Recommendations DTOs
 class RecommendationRequest(BaseModel):
-    user_id: int
+    usuario_id: int
 
 class AppRecommendation(BaseModel):
-    app_id: int
-    name: str
-    app_url: str
+    aplicacion_id: int
+    nombre: str
+    url_aplicacion: str
 
 class RecommendationsResponse(BaseModel):
-    recommendations: List[AppRecommendation]
+    recomendaciones: List[AppRecommendation]

@@ -65,7 +65,7 @@ export default function Reviews() {
 
   const getAppName = (appId: number) => {
     const app = purchasedApps.find((a) => a.app_id === appId);
-    return app?.name || `App #${appId}`;
+    return app?.nombre || `App #${appId}`;
   };
 
   return (
@@ -89,7 +89,7 @@ export default function Reviews() {
             >
               {purchasedApps.map((app) => (
                 <MenuItem key={app.app_id} value={app.app_id}>
-                  {app.name}
+                  {app.nombre}
                 </MenuItem>
               ))}
             </Select>
@@ -146,9 +146,9 @@ export default function Reviews() {
                   <Typography variant="h6" gutterBottom>
                     {getAppName(review.app_id)}
                   </Typography>
-                  <Rating value={review.rating} readOnly />
+                  <Rating value={review.calificacion} readOnly />
                   <Typography variant="body2" sx={{ mt: 1 }}>
-                    {review.comment}
+                    {review.comentario}
                   </Typography>
                 </CardContent>
               </Card>

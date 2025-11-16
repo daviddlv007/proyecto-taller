@@ -96,8 +96,8 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
       >
         <Box
           component="img"
-          src={app.cover_image || 'https://via.placeholder.com/300x180?text=No+Image'}
-          alt={app.name}
+          src={app.imagen_portada || 'https://via.placeholder.com/300x180?text=No+Image'}
+          alt={app.nombre}
           sx={{
             width: '100%',
             height: 180,
@@ -108,12 +108,12 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
         />
         <CardContent sx={{ flexGrow: 1 }}>
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-            {app.name}
+            {app.nombre}
           </Typography>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-            <Chip label={app.category} size="small" color="primary" />
+            <Chip label={app.categoria} size="small" color="primary" />
             <Typography variant="h6" color="success.main" fontWeight="bold">
-              ${app.price.toFixed(2)}
+              ${app.precio.toFixed(2)}
             </Typography>
           </Box>
         </CardContent>
@@ -154,25 +154,25 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
         <DialogTitle>
           <Box display="flex" alignItems="center" gap={1}>
             <InfoIcon color="primary" />
-            {app.name}
+            {app.nombre}
           </Box>
         </DialogTitle>
         <DialogContent>
           <Box mb={2}>
             <img
-              src={app.cover_image || 'https://via.placeholder.com/400x200?text=No+Image'}
-              alt={app.name}
+              src={app.imagen_portada || 'https://via.placeholder.com/400x200?text=No+Image'}
+              alt={app.nombre}
               style={{ width: '100%', borderRadius: 8 }}
             />
           </Box>
-          <Chip label={app.category} color="primary" sx={{ mb: 2 }} />
+          <Chip label={app.categoria} color="primary" sx={{ mb: 2 }} />
           <Typography variant="body1" paragraph>
-            {app.description}
+            {app.descripcion}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             URL:{' '}
-            <a href={app.app_url} target="_blank" rel="noopener noreferrer">
-              {app.app_url}
+            <a href={app.url_aplicacion} target="_blank" rel="noopener noreferrer">
+              {app.url_aplicacion}
             </a>
           </Typography>
         </DialogContent>
@@ -191,7 +191,7 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
         >
           <Box display="flex" alignItems="center" gap={1}>
             <PlayArrowIcon color="primary" />
-            Probando: {app.name}
+            Probando: {app.nombre}
           </Box>
           <IconButton onClick={() => setOpenPreview(false)}>
             <CloseIcon />
@@ -200,11 +200,11 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
         <DialogContent sx={{ p: 0, height: '80vh' }}>
           <Box
             component="iframe"
-            src={app.app_url}
+            src={app.url_aplicacion}
             width="100%"
             height="100%"
             sx={{ border: 'none' }}
-            title={app.name}
+            title={app.nombre}
           />
         </DialogContent>
       </Dialog>
@@ -214,7 +214,7 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
         <DialogTitle>
           <Box display="flex" alignItems="center" gap={1}>
             <ShoppingCartIcon color="primary" />
-            Comprar: {app.name}
+            Comprar: {app.nombre}
           </Box>
         </DialogTitle>
         <DialogContent>
@@ -260,15 +260,15 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
                 </Typography>
                 <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 2, my: 2 }}>
                   <Typography variant="h6" gutterBottom>
-                    {app.name}
+                    {app.nombre}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" paragraph>
-                    {app.description}
+                    {app.descripcion}
                   </Typography>
                   <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Chip label={app.category} color="primary" size="small" />
+                    <Chip label={app.categoria} color="primary" size="small" />
                     <Typography variant="h5" color="success.main" fontWeight="bold">
-                      ${app.price.toFixed(2)}
+                      ${app.precio.toFixed(2)}
                     </Typography>
                   </Box>
                 </Box>

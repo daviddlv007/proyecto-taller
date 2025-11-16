@@ -39,13 +39,13 @@ export const AppForm = () => {
           const app = apps.find((a) => a.id === Number(id));
           if (app) {
             setForm({
-              name: app.name,
-              description: app.description,
-              category: app.category,
-              app_url: app.app_url,
-              cover_image: app.cover_image ?? '',
-              price: app.price ?? 0,
-              demo_url: app.demo_url ?? '',
+              name: app.nombre,
+              description: app.descripcion,
+              category: app.categoria,
+              app_url: app.url_aplicacion,
+              cover_image: app.imagen_portada ?? '',
+              price: app.precio ?? 0,
+              demo_url: app.url_video ?? '',
               credentials_template: '',
             });
           } else {
@@ -60,7 +60,7 @@ export const AppForm = () => {
   }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm((prev) => ({ ...prev, [e.target.nombre]: e.target.value }));
   };
 
   const handleSubmit = async () => {
@@ -68,7 +68,7 @@ export const AppForm = () => {
     try {
       if (id) await api.updateApp(Number(id), form);
       else await api.createApp(form);
-      navigate('/vendor/apps');
+      navigate('/desarrollador/apps');
     } catch (err) {
       console.error(err);
       alert('Error al guardar la app');
@@ -87,7 +87,7 @@ export const AppForm = () => {
         fullWidth
         label="Nombre"
         name="name"
-        value={form.name}
+        value={form.nombre}
         onChange={handleChange}
         margin="normal"
       />
@@ -96,7 +96,7 @@ export const AppForm = () => {
         fullWidth
         label="Descripción"
         name="description"
-        value={form.description}
+        value={form.descripcion}
         onChange={handleChange}
         margin="normal"
       />
@@ -105,7 +105,7 @@ export const AppForm = () => {
         fullWidth
         label="Categoría"
         name="category"
-        value={form.category}
+        value={form.categoria}
         onChange={handleChange}
         margin="normal"
       />
@@ -114,7 +114,7 @@ export const AppForm = () => {
         fullWidth
         label="URL de la app"
         name="app_url"
-        value={form.app_url}
+        value={form.url_aplicacion}
         onChange={handleChange}
         margin="normal"
       />
@@ -123,7 +123,7 @@ export const AppForm = () => {
         fullWidth
         label="URL de la imagen de portada"
         name="cover_image"
-        value={form.cover_image}
+        value={form.imagen_portada}
         onChange={handleChange}
         margin="normal"
         helperText="Opcional: una imagen para mostrar en la lista de apps"
@@ -134,7 +134,7 @@ export const AppForm = () => {
         label="Precio (USD)"
         name="price"
         type="number"
-        value={form.price}
+        value={form.precio}
         onChange={handleChange}
         margin="normal"
         helperText="Ingresa 0 para apps gratuitas"
@@ -145,7 +145,7 @@ export const AppForm = () => {
         fullWidth
         label="URL de Demo (opcional)"
         name="demo_url"
-        value={form.demo_url}
+        value={form.url_video}
         onChange={handleChange}
         margin="normal"
         helperText="Opcional: URL de una versión demo de tu app"

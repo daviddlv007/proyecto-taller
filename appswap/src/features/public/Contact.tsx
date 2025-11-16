@@ -14,7 +14,7 @@ const Contact: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.nombre]: e.target.value,
     });
   };
 
@@ -22,7 +22,7 @@ const Contact: React.FC = () => {
     e.preventDefault();
 
     // Validación básica
-    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+    if (!formData.nombre || !formData.email || !formData.subject || !formData.message) {
       toast.error('Por favor completa todos los campos');
       return;
     }
@@ -58,7 +58,7 @@ const Contact: React.FC = () => {
                 fullWidth
                 label="Nombre"
                 name="name"
-                value={formData.name}
+                value={formData.nombre}
                 onChange={handleChange}
                 required
               />

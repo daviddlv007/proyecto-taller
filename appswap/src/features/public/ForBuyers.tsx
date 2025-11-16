@@ -118,7 +118,7 @@ const ForBuyers: React.FC = () => {
                     {step.title}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {step.description}
+                    {step.descripcion}
                   </Typography>
                 </CardContent>
               </Card>

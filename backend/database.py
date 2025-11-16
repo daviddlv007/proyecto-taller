@@ -16,67 +16,83 @@ else:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+class Rol(Base):
+    __tablename__ = "roles"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String, unique=True, index=True)
+    
+    usuarios = relationship("User", back_populates="rol_obj")
+
+class Categoria(Base):
+    __tablename__ = "categorias"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String, unique=True, index=True)
+    
+    aplicaciones = relationship("App", back_populates="categoria_obj")
+
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "usuarios"
     
     id = Column(Integer, primary_key=True, index=True)
     correo = Column(String, unique=True, index=True)
     nombre = Column(String)
     contrasena = Column(String)
-    role = Column(String)  # "vendor" or "buyer"
+    rol_id = Column(Integer, ForeignKey("roles.id"))
     
-    # Relaciones
-    vendor_apps = relationship("App", back_populates="owner", foreign_keys="App.owner_id")
-    buyer_payments = relationship("Payment", back_populates="buyer", foreign_keys="Payment.buyer_id")
-    reviews = relationship("Review", back_populates="user")
+    rol_obj = relationship("Rol", back_populates="usuarios")
+    aplicaciones_desarrollador = relationship("App", back_populates="propietario", foreign_keys="App.propietario_id")
+    compras = relationship("Payment", back_populates="comprador", foreign_keys="Payment.comprador_id")
+    resenas = relationship("Review", back_populates="autor")
 
 class App(Base):
-    __tablename__ = "apps"
+    __tablename__ = "aplicaciones"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    description = Column(String)
-    category = Column(String)
-    app_url = Column(String)
-    owner_id = Column(Integer, ForeignKey("users.id"))
-    cover_image = Column(String, nullable=True)  # URL de la imagen de portada
-    price = Column(Float, default=0.0)  # Precio de la aplicación
-    demo_url = Column(String, nullable=True)  # URL de demo gratuita
-    credentials_template = Column(String, nullable=True)  # Plantilla de credenciales (JSON string)
+    nombre = Column(String, index=True)
+    descripcion = Column(String)
+    categoria_id = Column(Integer, ForeignKey("categorias.id"))
+    url_aplicacion = Column(String)
+    propietario_id = Column(Integer, ForeignKey("usuarios.id"))
+    imagen_portada = Column(String, nullable=True)
+    precio = Column(Float, default=0.0)
+    url_video = Column(String, nullable=True)
+    plantilla_credenciales = Column(String, nullable=True)
     
-    # Relaciones
-    owner = relationship("User", back_populates="vendor_apps")
-    payments = relationship("Payment", back_populates="app")
-    reviews = relationship("Review", back_populates="app")
+    categoria_obj = relationship("Categoria", back_populates="aplicaciones")
+    propietario = relationship("User", back_populates="aplicaciones_desarrollador")
+    pagos = relationship("Payment", back_populates="aplicacion")
+    resenas = relationship("Review", back_populates="aplicacion")
 
 class Payment(Base):
-    __tablename__ = "payments"
+    __tablename__ = "pagos"
     
     id = Column(Integer, primary_key=True, index=True)
-    app_id = Column(Integer, ForeignKey("apps.id"))
-    buyer_id = Column(Integer, ForeignKey("users.id"))
-    status = Column(String, default="confirmed")  # Ahora por defecto "confirmed"
-    qr_code = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    credentials = Column(String, nullable=True)  # Credenciales entregadas al comprador (JSON string)
+    aplicacion_id = Column(Integer, ForeignKey("aplicaciones.id"))
+    comprador_id = Column(Integer, ForeignKey("usuarios.id"))
+    estado = Column(String, default="confirmado")  # Ahora por defecto "confirmado"
+    codigo_qr = Column(String)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    credenciales = Column(String, nullable=True)  # Credenciales entregadas al comprador (JSON string)
     
     # Relaciones
-    app = relationship("App", back_populates="payments")
-    buyer = relationship("User", back_populates="buyer_payments")
+    aplicacion = relationship("App", back_populates="pagos")
+    comprador = relationship("User", back_populates="compras")
 
 class Review(Base):
-    __tablename__ = "reviews"
+    __tablename__ = "resenas"
     
     id = Column(Integer, primary_key=True, index=True)
-    app_id = Column(Integer, ForeignKey("apps.id"))
-    user_id = Column(Integer, ForeignKey("users.id"))
-    rating = Column(Integer)
-    comment = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    aplicacion_id = Column(Integer, ForeignKey("aplicaciones.id"))
+    autor_id = Column(Integer, ForeignKey("usuarios.id"))
+    calificacion = Column(Integer)
+    comentario = Column(String)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
     
     # Relaciones
-    app = relationship("App", back_populates="reviews")
-    user = relationship("User", back_populates="reviews")
+    aplicacion = relationship("App", back_populates="resenas")
+    autor = relationship("User", back_populates="resenas")
 
 # Crear tablas
 Base.metadata.create_all(bind=engine)

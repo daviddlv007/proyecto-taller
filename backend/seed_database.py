@@ -6,7 +6,7 @@ Preparado para escalar a datasets grandes para ML en el futuro.
 import json
 import random
 from datetime import datetime, timedelta
-from database import SessionLocal, User, App, Payment, Review, Base, engine
+from database import SessionLocal, User, App, Payment, Review, Rol, Categoria, Base, engine
 from passlib.context import CryptContext
 
 # Configuración de hashing de contraseñas
@@ -104,19 +104,28 @@ def create_users(db, config):
     """Crea usuarios vendedores y compradores"""
     print(f"👥 Creando usuarios de desarrollo y {config['vendors']} vendedores adicionales y {config['buyers']} compradores adicionales...")
     
+    rol_desarrollador = db.query(Rol).filter(Rol.nombre == "desarrollador").first()
+    if not rol_desarrollador:
+        rol_desarrollador = Rol(nombre="desarrollador")
+        db.add(rol_desarrollador)
+        db.flush()
+    
+    rol_usuario = db.query(Rol).filter(Rol.nombre == "usuario").first()
+    if not rol_usuario:
+        rol_usuario = Rol(nombre="usuario")
+        db.add(rol_usuario)
+        db.flush()
+    
     vendors = []
     buyers = []
     
-    # ===== USUARIOS FIJOS PARA DESARROLLO (DEV_USERS del frontend) =====
-    # Estos usuarios deben existir para que el DevLogin funcione
     print("🔧 Creando usuarios de desarrollo (DEV_USERS)...")
     
-    # Vendedores fijos
     dev_vendor1 = User(
         correo="vendor@example.com",
         nombre="Juan Vendedor",
         contrasena=hash_password("123456"),
-        role="vendor"
+        rol_id=rol_desarrollador.id
     )
     db.add(dev_vendor1)
     vendors.append(dev_vendor1)
@@ -125,17 +134,16 @@ def create_users(db, config):
         correo="maria@vendor.com",
         nombre="Maria García",
         contrasena=hash_password("123456"),
-        role="vendor"
+        rol_id=rol_desarrollador.id
     )
     db.add(dev_vendor2)
     vendors.append(dev_vendor2)
     
-    # Compradores fijos
     dev_buyer1 = User(
         correo="buyer@example.com",
         nombre="Ana Compradora",
         contrasena=hash_password("123456"),
-        role="buyer"
+        rol_id=rol_usuario.id
     )
     db.add(dev_buyer1)
     buyers.append(dev_buyer1)
@@ -144,17 +152,15 @@ def create_users(db, config):
         correo="pedro@buyer.com",
         nombre="Pedro López",
         contrasena=hash_password("123456"),
-        role="buyer"
+        rol_id=rol_usuario.id
     )
     db.add(dev_buyer2)
     buyers.append(dev_buyer2)
     
     print("✅ Usuarios de desarrollo creados (para DevLogin)")
     
-    # ===== USUARIOS ADICIONALES PARA TESTING =====
-    # Solo crear usuarios adicionales si el config lo requiere (para datasets más grandes)
-    additional_vendors = max(0, config['vendors'] - 2)  # Ya creamos 2 vendedores fijos
-    additional_buyers = max(0, config['buyers'] - 2)    # Ya creamos 2 compradores fijos
+    additional_vendors = max(0, config['vendors'] - 2)
+    additional_buyers = max(0, config['buyers'] - 2)
     
     if additional_vendors > 0:
         print(f"📝 Creando {additional_vendors} vendedores adicionales...")
@@ -163,7 +169,7 @@ def create_users(db, config):
                 correo=f"vendor{i}@appswap.com",
                 nombre=f"Vendor {i}",
                 contrasena=hash_password("vendor123"),
-                role="vendor"
+                rol_id=rol_desarrollador.id
             )
             db.add(vendor)
             vendors.append(vendor)
@@ -175,7 +181,7 @@ def create_users(db, config):
                 correo=f"buyer{i}@appswap.com",
                 nombre=f"Buyer {i}",
                 contrasena=hash_password("buyer123"),
-                role="buyer"
+                rol_id=rol_usuario.id
             )
             db.add(buyer)
             buyers.append(buyer)
@@ -188,6 +194,15 @@ def create_apps(db, vendors, config):
     """Crea aplicaciones para cada vendedor"""
     print("📱 Creando aplicaciones...")
     
+    categorias_cache = {}
+    for cat_nombre in CATEGORIES:
+        cat_obj = db.query(Categoria).filter(Categoria.nombre == cat_nombre).first()
+        if not cat_obj:
+            cat_obj = Categoria(nombre=cat_nombre)
+            db.add(cat_obj)
+            db.flush()
+        categorias_cache[cat_nombre] = cat_obj
+    
     apps = []
     app_names_copy = APP_NAMES.copy()
     random.shuffle(app_names_copy)
@@ -198,24 +213,24 @@ def create_apps(db, vendors, config):
         
         for _ in range(num_apps):
             if name_index >= len(app_names_copy):
-                # Si se acaban los nombres, reusar con sufijos
                 app_name = f"{random.choice(APP_NAMES)} Plus"
             else:
                 app_name = app_names_copy[name_index]
                 name_index += 1
             
             price = round(random.choice([0.0, 4.99, 9.99, 14.99, 19.99, 29.99, 49.99, 99.99]), 2)
+            cat_nombre = random.choice(CATEGORIES)
             
             app = App(
-                name=app_name,
-                description=random.choice(DESCRIPTIONS),
-                category=random.choice(CATEGORIES),
-                app_url=f"https://{app_name.lower().replace(' ', '')}.com/app",
-                owner_id=vendor.id,
-                cover_image=f"https://picsum.photos/seed/{app_name}/400/200",
-                price=price,
-                demo_url=f"https://{app_name.lower().replace(' ', '')}.com/demo" if price > 0 else None,
-                credentials_template=None
+                nombre=app_name,
+                descripcion=random.choice(DESCRIPTIONS),
+                categoria_id=categorias_cache[cat_nombre].id,
+                url_aplicacion=f"https://{app_name.lower().replace(' ', '')}.com/app",
+                propietario_id=vendor.id,
+                imagen_portada=f"https://picsum.photos/seed/{app_name}/400/200",
+                precio=price,
+                url_video=f"https://{app_name.lower().replace(' ', '')}.com/demo" if price > 0 else None,
+                plantilla_credenciales=None
             )
             db.add(app)
             apps.append(app)
@@ -242,12 +257,12 @@ def create_purchases_and_reviews(db, buyers, apps, config):
             purchase_date = datetime.utcnow() - timedelta(days=random.randint(1, 90))
             
             payment = Payment(
-                app_id=app.id,
-                buyer_id=buyer.id,
-                status="confirmed",
-                qr_code=f"QR_{buyer.id}_{app.id}_{random.randint(1000, 9999)}",
-                created_at=purchase_date,
-                credentials=generate_credentials(buyer.id, app.id)
+                aplicacion_id=app.id,
+                comprador_id=buyer.id,
+                estado="confirmado",
+                codigo_qr=f"QR_{buyer.id}_{app.id}_{random.randint(1000, 9999)}",
+                fecha_creacion=purchase_date,
+                credenciales=generate_credentials(buyer.id, app.id)
             )
             db.add(payment)
             payments.append(payment)
@@ -258,11 +273,11 @@ def create_purchases_and_reviews(db, buyers, apps, config):
                 rating = random.randint(3, 5)  # Ratings más positivos (3-5 estrellas)
                 
                 review = Review(
-                    app_id=app.id,
-                    user_id=buyer.id,
-                    rating=rating,
-                    comment=random.choice(REVIEW_COMMENTS) if random.random() > 0.3 else None,
-                    created_at=review_date
+                    aplicacion_id=app.id,
+                    autor_id=buyer.id,
+                    calificacion=rating,
+                    comentario=random.choice(REVIEW_COMMENTS) if random.random() > 0.3 else None,
+                    fecha_creacion=review_date
                 )
                 db.add(review)
                 reviews.append(review)
@@ -282,21 +297,21 @@ def print_summary(vendors, buyers, apps, payments, reviews):
     print(f"\n📱 Aplicaciones: {len(apps)}")
     
     # Estadísticas de precios
-    free_apps = sum(1 for app in apps if app.price == 0)
+    free_apps = sum(1 for app in apps if app.precio == 0)
     paid_apps = len(apps) - free_apps
-    avg_price = sum(app.price for app in apps) / len(apps) if apps else 0
+    avg_price = sum(app.precio for app in apps) / len(apps) if apps else 0
     
     print(f"   • Apps gratuitas: {free_apps}")
     print(f"   • Apps de pago: {paid_apps}")
     print(f"   • Precio promedio: ${avg_price:.2f}")
     
     print(f"\n🛒 Compras: {len(payments)}")
-    total_revenue = sum(app.price for payment in payments for app in apps if app.id == payment.app_id)
+    total_revenue = sum(app.precio for payment in payments for app in apps if app.id == payment.aplicacion_id)
     print(f"   • Ingresos totales: ${total_revenue:.2f}")
     
     print(f"\n⭐ Reseñas: {len(reviews)}")
     if reviews:
-        avg_rating = sum(review.rating for review in reviews) / len(reviews)
+        avg_rating = sum(review.calificacion for review in reviews) / len(reviews)
         print(f"   • Rating promedio: {avg_rating:.1f}/5.0")
     
     print("\n" + "="*60)

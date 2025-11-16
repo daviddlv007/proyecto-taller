@@ -23,30 +23,29 @@ class AppRecommender:
         from database import App, Payment, Review
         from sqlalchemy import func
         
-        # Matriz usuario-item (compras)
         purchases = db.query(
-            Payment.buyer_id,
-            Payment.app_id,
-            App.category,
-            App.price
-        ).join(App).filter(Payment.status == 'confirmed').all()
+            Payment.comprador_id,
+            Payment.aplicacion_id,
+            App.categoria_id,
+            App.precio
+        ).join(App).filter(Payment.estado == 'confirmado').all()
         
         purchase_data = [{
-            'user_id': p.buyer_id,
-            'app_id': p.app_id,
+            'user_id': p[0],
+            'app_id': p[1],
             'purchased': 1,
-            'category': p.category,
-            'price': p.price
+            'category_id': p[2],
+            'price': p[3]
         } for p in purchases]
         
         # Enriquecer con ratings
         reviews = db.query(
-            Review.user_id,
-            Review.app_id,
-            Review.rating
+            Review.autor_id,
+            Review.aplicacion_id,
+            Review.calificacion
         ).all()
         
-        review_dict = {(r.user_id, r.app_id): r.rating for r in reviews}
+        review_dict = {(r.autor_id, r.aplicacion_id): r.calificacion for r in reviews}
         
         for item in purchase_data:
             key = (item['user_id'], item['app_id'])
@@ -58,18 +57,18 @@ class AppRecommender:
         apps = db.query(App).all()
         app_features = []
         for app in apps:
-            avg_rating = db.query(func.avg(Review.rating))\
-                .filter(Review.app_id == app.id)\
+            avg_rating = db.query(func.avg(Review.calificacion))\
+                .filter(Review.aplicacion_id == app.id)\
                 .scalar() or 3.0
             
             total_sales = db.query(func.count(Payment.id))\
-                .filter(Payment.app_id == app.id, Payment.status == 'confirmed')\
+                .filter(Payment.aplicacion_id == app.id, Payment.estado == 'confirmado')\
                 .scalar() or 0
             
             app_features.append({
                 'app_id': app.id,
-                'category': app.category,
-                'price': app.price,
+                'category_id': app.categoria_id,
+                'price': app.precio,
                 'avg_rating': float(avg_rating),
                 'popularity': total_sales
             })
@@ -96,17 +95,14 @@ class AppRecommender:
             fill_value=0
         )
         
-        # 2. Similitud entre items (content-based)
         print("🤖 Calculando similitud entre apps...")
-        self.category_encoder.fit(df_apps['category'])
-        df_apps['category_encoded'] = self.category_encoder.transform(df_apps['category'])
+        self.category_encoder.fit(df_apps['category_id'])
+        df_apps['category_encoded'] = self.category_encoder.transform(df_apps['category_id'])
         
-        # Normalizar features
         df_apps['price_norm'] = (df_apps['price'] - df_apps['price'].min()) / (df_apps['price'].max() - df_apps['price'].min() + 0.01)
         df_apps['rating_norm'] = df_apps['avg_rating'] / 5.0
         df_apps['popularity_norm'] = (df_apps['popularity'] - df_apps['popularity'].min()) / (df_apps['popularity'].max() - df_apps['popularity'].min() + 0.01)
         
-        # Features para similitud
         feature_matrix = df_apps[['category_encoded', 'price_norm', 'rating_norm', 'popularity_norm']].values
         self.item_similarity = cosine_similarity(feature_matrix)
         self.app_ids = df_apps['app_id'].values
@@ -131,8 +127,8 @@ class AppRecommender:
         
         # Apps ya compradas por el usuario
         purchased_app_ids = set(
-            db.query(Payment.app_id)
-            .filter(Payment.buyer_id == user_id, Payment.status == 'confirmed')
+            db.query(Payment.aplicacion_id)
+            .filter(Payment.comprador_id == user_id, Payment.estado == 'confirmado')
             .all()
         )
         purchased_app_ids = {app_id for (app_id,) in purchased_app_ids}
@@ -223,11 +219,11 @@ class AppRecommender:
                 
                 result.append({
                     'id': app.id,
-                    'name': app.name,
-                    'description': app.description,
-                    'category': app.category,
-                    'price': app.price,
-                    'cover_image': app.cover_image,
+                    'name': app.nombre,
+                    'description': app.descripcion,
+                    'category': app.categoria_obj.nombre,
+                    'price': app.precio,
+                    'cover_image': app.imagen_portada,
                     'score': round(rec['score'], 2),
                     'reason': reason_text
                 })

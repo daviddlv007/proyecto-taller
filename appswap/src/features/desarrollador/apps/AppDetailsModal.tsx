@@ -16,7 +16,7 @@ export const AppDetailsModal = ({ open, onClose, app }: AppDetailsModalProps) =>
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {app.name}
+        {app.nombre}
         <IconButton onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>
@@ -25,15 +25,15 @@ export const AppDetailsModal = ({ open, onClose, app }: AppDetailsModalProps) =>
       <DialogContent>
         <Box
           component="img"
-          src={app.cover_image || 'https://via.placeholder.com/600x300?text=Sin+imagen'}
-          alt={app.name}
+          src={app.imagen_portada || 'https://via.placeholder.com/600x300?text=Sin+imagen'}
+          alt={app.nombre}
           sx={{ width: '100%', height: 300, objectFit: 'cover', borderRadius: 1, mb: 2 }}
         />
 
         <Typography variant="body2" color="text.secondary" mb={1}>
-          {app.category}
+          {app.categoria}
         </Typography>
-        <Typography variant="body1">{app.description}</Typography>
+        <Typography variant="body1">{app.descripcion}</Typography>
       </DialogContent>
     </Dialog>
   );

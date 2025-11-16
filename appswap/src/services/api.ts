@@ -53,7 +53,7 @@ export const api = {
   // --------------------------
   // Autenticación
   // --------------------------
-  login: async (correo: string, contrasena: string, role: 'vendor' | 'buyer') => {
+  login: async (correo: string, contrasena: string, role: 'desarrollador' | 'usuario') => {
     try {
       console.log(`📡 Enviando login a: ${API_BASE_URL}/${role}/auth/login`);
       const data = await apiRequest(`/${role}/auth/login`, {
@@ -73,7 +73,7 @@ export const api = {
 
   register: async (
     userData: { correo: string; contrasena: string; nombre: string },
-    role: 'vendor' | 'buyer'
+    role: 'desarrollador' | 'usuario'
   ) => {
     try {
       const data = await apiRequest(`/${role}/auth/register`, {
@@ -101,30 +101,30 @@ export const api = {
   // Apps (Vendedor)
   // --------------------------
   getApps: async (): Promise<App[]> => {
-    const data = await apiRequest('/vendor/apps');
+    const data = await apiRequest('/desarrollador/apps');
     return data;
   },
 
   getAppById: async (id: number): Promise<App> => {
-    return await apiRequest(`/vendor/apps/${id}`);
+    return await apiRequest(`/desarrollador/apps/${id}`);
   },
 
   createApp: async (appData: Partial<App>): Promise<App> => {
-    return await apiRequest('/vendor/apps', {
+    return await apiRequest('/desarrollador/apps', {
       method: 'POST',
       body: JSON.stringify(appData),
     });
   },
 
   updateApp: async (id: number, appData: Partial<App>): Promise<App> => {
-    return await apiRequest(`/vendor/apps/${id}`, {
+    return await apiRequest(`/desarrollador/apps/${id}`, {
       method: 'PUT',
       body: JSON.stringify(appData),
     });
   },
 
   deleteApp: async (id: number): Promise<{ message: string }> => {
-    return await apiRequest(`/vendor/apps/${id}`, {
+    return await apiRequest(`/desarrollador/apps/${id}`, {
       method: 'DELETE',
     });
   },
@@ -133,34 +133,34 @@ export const api = {
   // Apps (Comprador)
   // --------------------------
   getBuyerApps: async (): Promise<App[]> => {
-    const data = await apiRequest('/buyer/apps');
-    return data.apps;
+    const data = await apiRequest('/usuario/apps');
+    return data.aplicaciones; // Backend devuelve 'aplicaciones' en español
   },
 
   executeApp: async (appId: number) => {
-    return await apiRequest(`/buyer/apps/${appId}/execute`);
+    return await apiRequest(`/usuario/apps/${appId}/execute`);
   },
 
   // --------------------------
   // Pagos
   // --------------------------
   getPayments: async (): Promise<Payment[]> => {
-    return await apiRequest('/vendor/payments');
+    return await apiRequest('/desarrollador/payments');
   },
 
   getBuyerPayments: async (): Promise<Payment[]> => {
-    return await apiRequest('/buyer/payments');
+    return await apiRequest('/usuario/payments');
   },
 
   createPayment: async (paymentData: { app_id: number; qr_code: string }): Promise<Payment> => {
-    return await apiRequest('/buyer/payments', {
+    return await apiRequest('/usuario/payments', {
       method: 'POST',
       body: JSON.stringify(paymentData),
     });
   },
 
   confirmPayment: async (id: number): Promise<Payment> => {
-    return await apiRequest(`/vendor/payments/${id}`, {
+    return await apiRequest(`/desarrollador/payments/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ status: 'confirmed' }),
     });
@@ -170,11 +170,11 @@ export const api = {
   // Reviews
   // --------------------------
   getAppReviews: async (appId: number): Promise<Review[]> => {
-    return await apiRequest(`/vendor/apps/${appId}/reviews`);
+    return await apiRequest(`/desarrollador/apps/${appId}/reviews`);
   },
 
   getMyReviews: async (): Promise<Review[]> => {
-    return await apiRequest('/buyer/reviews');
+    return await apiRequest('/usuario/reviews');
   },
 
   createReview: async (reviewData: {
@@ -182,7 +182,7 @@ export const api = {
     rating: number;
     comment: string;
   }): Promise<Review> => {
-    return await apiRequest('/buyer/reviews', {
+    return await apiRequest('/usuario/reviews', {
       method: 'POST',
       body: JSON.stringify(reviewData),
     });
@@ -192,14 +192,14 @@ export const api = {
   // Stats de apps
   // --------------------------
   getAppStats: async (appId: number): Promise<Stats> => {
-    return await apiRequest(`/vendor/apps/${appId}/stats`);
+    return await apiRequest(`/desarrollador/apps/${appId}/stats`);
   },
 
   // --------------------------
   // Recomendaciones
   // --------------------------
   getVendorRecommendations: async (userId: number) => {
-    const data = await apiRequest('/vendor/recommendations', {
+    const data = await apiRequest('/desarrollador/recommendations', {
       method: 'POST',
       body: JSON.stringify({ user_id: userId }),
     });
@@ -208,9 +208,9 @@ export const api = {
 
   getBuyerRecommendations: async () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const data = await apiRequest('/buyer/recommendations', {
+    const data = await apiRequest('/usuario/recommendations', {
       method: 'POST',
-      body: JSON.stringify({ user_id: user.id }),
+      body: JSON.stringify({ usuario_id: user.id }),
     });
     return data; // Ahora el backend devuelve directamente la lista de apps
   },
@@ -225,14 +225,38 @@ export const api = {
   },
 
   getMLRecommendations: async (userId: number, topK: number = 6) => {
-    return await apiRequest(`/ml/recommendations/${userId}?top_k=${topK}`);
+    const mlApps = await apiRequest(`/ml/recommendations/${userId}?top_k=${topK}`);
+    // El endpoint ML devuelve campos en inglés, mapear a español
+    return mlApps.map((app: any) => ({
+      id: app.id,
+      nombre: app.name,
+      descripcion: app.description,
+      categoria: app.category,
+      precio: app.price,
+      imagen_portada: app.cover_image,
+      url_aplicacion: app.url_aplicacion || '',
+      propietario_id: app.propietario_id || 0,
+      url_video: app.url_video || null,
+    }));
   },
 
   // --------------------------
   // Compras
   // --------------------------
   getBuyerPurchases: async () => {
-    const data = await apiRequest('/buyer/purchases');
-    return data.purchases;
+    const data = await apiRequest('/usuario/purchases');
+    // Mapear campos del backend (español) al formato esperado (inglés)
+    return data.compras.map((compra: any) => ({
+      id: compra.id,
+      app_id: compra.aplicacion_id,
+      app_name: compra.nombre_aplicacion,
+      app_category: compra.categoria_aplicacion,
+      app_description: compra.descripcion_aplicacion,
+      app_url: compra.url_aplicacion,
+      cover_image: compra.imagen_portada,
+      price: compra.precio,
+      credentials: compra.credenciales,
+      purchase_date: compra.fecha_compra,
+    }));
   },
 };

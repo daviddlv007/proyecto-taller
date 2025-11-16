@@ -56,7 +56,7 @@ export default function Dashboard() {
     queryKey: ['vendor-sales'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/vendor/sales', {
+      const response = await fetch('http://localhost:8000/desarrollador/sales', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -111,7 +111,7 @@ export default function Dashboard() {
     vendorSales.forEach((sale: any) => {
       const current = salesByApp.get(sale.app_id) || { sales: 0, revenue: 0 };
       // Usar el precio que viene en la venta (histórico)
-      const price = sale.price || 0;
+      const price = sale.price || 0; // Backend envía 'price', no 'precio'
       
       salesByApp.set(sale.app_id, {
         sales: current.sales + 1,
@@ -139,7 +139,7 @@ export default function Dashboard() {
 
     const averageRating =
       allReviewsData && allReviewsData.length > 0
-        ? allReviewsData.reduce((sum, r) => sum + r.rating, 0) / allReviewsData.length
+        ? allReviewsData.reduce((sum, r) => sum + r.calificacion, 0) / allReviewsData.length
         : 0;
 
     return {
@@ -296,16 +296,16 @@ export default function Dashboard() {
                       </Typography>
                       <Box
                         component="img"
-                        src={app.cover_image || 'https://via.placeholder.com/60'}
-                        alt={app.name}
+                        src={app.imagen_portada || 'https://via.placeholder.com/60'}
+                        alt={app.nombre}
                         sx={{ width: 60, height: 60, borderRadius: 1, objectFit: 'cover' }}
                       />
                       <Box>
                         <Typography variant="body1" fontWeight={600}>
-                          {app.name}
+                          {app.nombre}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {app.category}
+                          {app.categoria}
                         </Typography>
                       </Box>
                     </Box>
@@ -349,7 +349,7 @@ export default function Dashboard() {
                             key={i}
                             sx={{
                               fontSize: 16,
-                              color: i < review.rating ? 'warning.main' : 'grey.300',
+                              color: i < review.calificacion ? 'warning.main' : 'grey.300',
                             }}
                           />
                         ))}
@@ -359,9 +359,9 @@ export default function Dashboard() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary">
-                      {review.comment.length > 80
-                        ? `${review.comment.substring(0, 80)}...`
-                        : review.comment}
+                      {review.comentario.length > 80
+                        ? `${review.comentario.substring(0, 80)}...`
+                        : review.comentario}
                     </Typography>
                   </Box>
                 ))}
@@ -407,12 +407,12 @@ export default function Dashboard() {
               const salesByCategory = stats.allApps.reduce(
                 (acc, app) => {
                   const appData = stats.salesByApp.get(app.id) || { sales: 0, revenue: 0 };
-                  if (!acc[app.category]) {
-                    acc[app.category] = { sales: 0, revenue: 0, count: 0 };
+                  if (!acc[app.categoria]) {
+                    acc[app.categoria] = { sales: 0, revenue: 0, count: 0 };
                   }
-                  acc[app.category].sales += appData.sales;
-                  acc[app.category].revenue += appData.revenue;
-                  acc[app.category].count += 1;
+                  acc[app.categoria].sales += appData.sales;
+                  acc[app.categoria].revenue += appData.revenue;
+                  acc[app.categoria].count += 1;
                   return acc;
                 },
                 {} as Record<string, { sales: number; revenue: number; count: number }>
@@ -635,7 +635,7 @@ export default function Dashboard() {
                 sx={{ cursor: 'pointer' }}
               />
               {[
-                ...new Set(stats.allApps.map((app) => app.category)),
+                ...new Set(stats.allApps.map((app) => app.categoria)),
               ].map((cat) => (
                 <Chip
                   key={cat}
@@ -659,7 +659,7 @@ export default function Dashboard() {
                   const filteredApps =
                     selectedCategory === 'all'
                       ? stats.allApps
-                      : stats.allApps.filter((app) => app.category === selectedCategory);
+                      : stats.allApps.filter((app) => app.categoria === selectedCategory);
 
                   const appsWithSales = filteredApps
                     .map((app) => {
@@ -728,8 +728,8 @@ export default function Dashboard() {
                                 fontWeight={isHovered ? 600 : 500}
                                 style={{ transition: 'all 0.3s ease' }}
                               >
-                                {item.app.name.substring(0, 15)}
-                                {item.app.name.length > 15 ? '...' : ''}
+                                {item.app.nombre.substring(0, 15)}
+                                {item.app.nombre.length > 15 ? '...' : ''}
                               </text>
 
                               {/* Barra con hover effect y animación */}
@@ -747,7 +747,7 @@ export default function Dashboard() {
                                 }}
                               >
                                 <title>
-                                  {`${item.app.name}\n${item.sales} ventas\n$${item.revenue.toFixed(2)} revenue`}
+                                  {`${item.app.nombre}\n${item.sales} ventas\n$${item.revenue.toFixed(2)} revenue`}
                                 </title>
                               </rect>
 
@@ -787,7 +787,7 @@ export default function Dashboard() {
                                   fontSize={9}
                                   fontStyle="italic"
                                 >
-                                  {item.app.category} • ${item.app.price}
+                                  {item.app.categoria} • ${item.app.precio}
                                 </text>
                               )}
                             </g>

@@ -101,7 +101,7 @@ const LandingHome: React.FC = () => {
                     {feature.title}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {feature.description}
+                    {feature.descripcion}
                   </Typography>
                 </CardContent>
               </Card>

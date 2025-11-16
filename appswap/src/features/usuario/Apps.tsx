@@ -49,46 +49,30 @@ export default function Apps() {
     },
   });
 
-  // Obtener reviews para calcular ratings
-  const { data: allReviews = [] } = useQuery<any[]>({
-    queryKey: ['allReviews'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('http://localhost:8000/reviews');
-        if (!response.ok) return [];
-        return response.json();
-      } catch {
-        return [];
-      }
-    },
-  });
+  // Obtener reviews para calcular ratings - deshabilitado porque no hay endpoint público
+  // Las reviews se muestran solo después de comprar
+  const allReviews: any[] = [];
 
   // Calcular rating promedio por app
   const appRatings = useMemo(() => {
     const ratings: Record<number, number> = {};
     apps.forEach((app) => {
-      const appReviews = allReviews.filter((r: any) => r.app_id === app.id);
-      if (appReviews.length > 0) {
-        const avgRating =
-          appReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / appReviews.length;
-        ratings[app.id] = avgRating;
-      } else {
-        ratings[app.id] = 0;
-      }
+      // Por defecto 0, se mostrará después de comprar
+      ratings[app.id] = 0;
     });
     return ratings;
-  }, [apps, allReviews]);
+  }, [apps]);
 
   // Obtener categorías únicas
   const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(apps.map((app) => app.category))];
+    const uniqueCategories = [...new Set(apps.map((app) => app.categoria))];
     return uniqueCategories.sort();
   }, [apps]);
 
   // Calcular rango de precios
   const maxPrice = useMemo(() => {
     if (apps.length === 0) return 1000;
-    return Math.ceil(Math.max(...apps.map((app) => app.price)));
+    return Math.ceil(Math.max(...apps.map((app) => app.precio)));
   }, [apps]);
 
   // Filtrar y buscar apps
@@ -97,14 +81,14 @@ export default function Apps() {
       // Búsqueda por nombre o descripción
       const matchesSearch =
         searchTerm === '' ||
-        app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (app.description && app.description.toLowerCase().includes(searchTerm.toLowerCase()));
+        app.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (app.descripcion && app.descripcion.toLowerCase().includes(searchTerm.toLowerCase()));
 
       // Filtro por categoría
-      const matchesCategory = categoryFilter === 'all' || app.category === categoryFilter;
+      const matchesCategory = categoryFilter === 'all' || app.categoria === categoryFilter;
 
       // Filtro por precio
-      const matchesPrice = app.price >= priceRange[0] && app.price <= priceRange[1];
+      const matchesPrice = app.precio >= priceRange[0] && app.precio <= priceRange[1];
 
       // Filtro por calificación
       const appRating = appRatings[app.id] || 0;
