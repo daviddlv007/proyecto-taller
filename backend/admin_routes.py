@@ -33,7 +33,7 @@ def seed_database(db: Session = Depends(get_db)):
             db.flush()
         
         vendors_data = [
-            ("Juan Vendedor", "vendor@example.com"),
+            ("Developer Demo", "dev@test.com"),  # USUARIO DEMO DESARROLLADOR - DUEÑO DE CALCULADORAPRO
             ("María García", "maria@vendor.com"),
             ("María García", "maria@techdev.com"),
             ("Carlos López", "carlos@innovaapps.com"),
@@ -48,7 +48,7 @@ def seed_database(db: Session = Depends(get_db)):
         ]
         
         buyers_data = [
-            ("Ana Compradora", "buyer@example.com"),
+            ("Comprador Demo", "comprador@test.com"),  # USUARIO DEMO COMPRADOR - NO COMPRÓ CALCULADORAPRO
             ("Pedro López", "pedro@buyer.com"),
             ("Pedro González", "pedro@empresa.com"),
             ("Lucía Fernández", "lucia@startup.com"),
@@ -66,11 +66,13 @@ def seed_database(db: Session = Depends(get_db)):
         ]
         
         vendors = []
-        for nombre, correo in vendors_data:
+        for i, (nombre, correo) in enumerate(vendors_data):
+            # Usuarios de demo tienen password "password", otros "123456"
+            pwd = "password" if correo in ["dev@test.com", "comprador@test.com"] else "123456"
             user = User(
                 nombre=nombre,
                 correo=correo,
-                contrasena=get_password_hash("123456"),
+                contrasena=get_password_hash(pwd),
                 rol_id=rol_desarrollador.id
             )
             db.add(user)
@@ -78,10 +80,11 @@ def seed_database(db: Session = Depends(get_db)):
         
         buyers = []
         for nombre, correo in buyers_data:
+            pwd = "password" if correo in ["dev@test.com", "comprador@test.com"] else "123456"
             user = User(
                 nombre=nombre,
                 correo=correo,
-                contrasena=get_password_hash("123456"),
+                contrasena=get_password_hash(pwd),
                 rol_id=rol_usuario.id
             )
             db.add(user)
@@ -101,76 +104,76 @@ def seed_database(db: Session = Depends(get_db)):
         
         apps_data = [
             # Productividad
-            ("TaskMaster Pro", "Gestión avanzada de tareas y proyectos con IA", 29.99, "https://taskmaster-pro.example.com", "https://taskmaster-pro.example.com/demo"),
-            ("TimeTracker Elite", "Seguimiento de tiempo y productividad para equipos", 24.99, "https://timetracker.example.com", "https://timetracker.example.com/demo"),
-            ("NotesFlow", "Organizador de notas con sincronización en tiempo real", 14.99, "https://notesflow.example.com", "https://notesflow.example.com/demo"),
-            ("MeetingHub", "Coordinador inteligente de reuniones y agendas", 34.99, "https://meetinghub.example.com", "https://meetinghub.example.com/demo"),
-            ("FocusTime", "Bloqueador de distracciones basado en Pomodoro", 9.99, "https://focustime.example.com", "https://focustime.example.com/demo"),
-            ("DocuShare Pro", "Gestor colaborativo de documentos empresariales", 39.99, "https://docushare.example.com", "https://docushare.example.com/demo"),
-            ("CalendarSync", "Sincronización avanzada de calendarios múltiples", 19.99, "https://calendarsync.example.com", "https://calendarsync.example.com/demo"),
-            ("WorkflowMax", "Automatización de flujos de trabajo empresariales", 44.99, "https://workflowmax.example.com", "https://workflowmax.example.com/demo"),
-            ("TeamCollab", "Plataforma de colaboración para equipos remotos", 27.99, "https://teamcollab.example.com", "https://teamcollab.example.com/demo"),
-            ("ProjectVision", "Visualizador de proyectos con Gantt y Kanban", 32.99, "https://projectvision.example.com", "https://projectvision.example.com/demo"),
+            ("TaskMaster Pro", "Gestión avanzada de tareas y proyectos con IA", 29.99, "https://taskmaster-pro.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("TimeTracker Elite", "Seguimiento de tiempo y productividad para equipos", 24.99, "https://timetracker.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("NotesFlow", "Organizador de notas con sincronización en tiempo real", 14.99, "https://notesflow.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("MeetingHub", "Coordinador inteligente de reuniones y agendas", 34.99, "https://meetinghub.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("FocusTime", "Bloqueador de distracciones basado en Pomodoro", 9.99, "https://focustime.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("DocuShare Pro", "Gestor colaborativo de documentos empresariales", 39.99, "https://docushare.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("CalendarSync", "Sincronización avanzada de calendarios múltiples", 19.99, "https://calendarsync.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("WorkflowMax", "Automatización de flujos de trabajo empresariales", 44.99, "https://workflowmax.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("TeamCollab", "Plataforma de colaboración para equipos remotos", 27.99, "https://teamcollab.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("ProjectVision", "Visualizador de proyectos con Gantt y Kanban", 32.99, "https://projectvision.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
             
             # Finanzas
-            ("MoneyWise", "Control personal de finanzas e inversiones", 15.99, "https://moneywise.example.com", "https://moneywise.example.com/demo"),
-            ("InvoicePro", "Generador profesional de facturas y presupuestos", 22.99, "https://invoicepro.example.com", "https://invoicepro.example.com/demo"),
-            ("ExpenseTracker", "Seguimiento automático de gastos empresariales", 18.99, "https://expensetracker.example.com", "https://expensetracker.example.com/demo"),
-            ("CryptoWatch", "Monitor de criptomonedas con alertas en tiempo real", 12.99, "https://cryptowatch.example.com", "https://cryptowatch.example.com/demo"),
-            ("BudgetMaster", "Planificador de presupuestos para PyMEs", 25.99, "https://budgetmaster.example.com", "https://budgetmaster.example.com/demo"),
-            ("TaxHelper", "Asistente para declaración de impuestos", 34.99, "https://taxhelper.example.com", "https://taxhelper.example.com/demo"),
-            ("PayrollGenius", "Sistema de nóminas automatizado", 49.99, "https://payrollgenius.example.com", "https://payrollgenius.example.com/demo"),
-            ("StockAnalyzer", "Análisis técnico de acciones con IA", 39.99, "https://stockanalyzer.example.com", "https://stockanalyzer.example.com/demo"),
-            ("FinanceDash", "Dashboard financiero personalizable", 27.99, "https://financedash.example.com", "https://financedash.example.com/demo"),
-            ("DebtFree", "Calculadora y planificador de pagos de deudas", 11.99, "https://debtfree.example.com", "https://debtfree.example.com/demo"),
+            ("MoneyWise", "Control personal de finanzas e inversiones", 15.99, "https://moneywise.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("InvoicePro", "Generador profesional de facturas y presupuestos", 22.99, "https://invoicepro.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("ExpenseTracker", "Seguimiento automático de gastos empresariales", 18.99, "https://expensetracker.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("CryptoWatch", "Monitor de criptomonedas con alertas en tiempo real", 12.99, "https://cryptowatch.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("BudgetMaster", "Planificador de presupuestos para PyMEs", 25.99, "https://budgetmaster.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("TaxHelper", "Asistente para declaración de impuestos", 34.99, "https://taxhelper.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("PayrollGenius", "Sistema de nóminas automatizado", 49.99, "https://payrollgenius.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("StockAnalyzer", "Análisis técnico de acciones con IA", 39.99, "https://stockanalyzer.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("FinanceDash", "Dashboard financiero personalizable", 27.99, "https://financedash.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("DebtFree", "Calculadora y planificador de pagos de deudas", 11.99, "https://debtfree.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
             
             # Marketing
-            ("SocialBoost", "Automatización de publicaciones en redes sociales", 32.99, "https://socialboost.example.com", "https://socialboost.example.com/demo"),
-            ("EmailCampaigner", "Creador de campañas de email marketing", 28.99, "https://emailcampaigner.example.com", "https://emailcampaigner.example.com/demo"),
-            ("SEOOptimizer", "Herramienta de optimización SEO con auditorías", 45.99, "https://seooptimizer.example.com", "https://seooptimizer.example.com/demo"),
-            ("ContentPlanner", "Planificador de contenido para blogs y redes", 19.99, "https://contentplanner.example.com", "https://contentplanner.example.com/demo"),
-            ("AdMetrics", "Análisis de métricas de campañas publicitarias", 37.99, "https://admetrics.example.com", "https://admetrics.example.com/demo"),
-            ("LeadGenerator", "Captador automático de leads calificados", 54.99, "https://leadgenerator.example.com", "https://leadgenerator.example.com/demo"),
-            ("InfluencerHub", "Gestor de colaboraciones con influencers", 41.99, "https://influencerhub.example.com", "https://influencerhub.example.com/demo"),
-            ("BrandMonitor", "Monitoreo de marca y menciones en internet", 29.99, "https://brandmonitor.example.com", "https://brandmonitor.example.com/demo"),
-            ("LandingBuilder", "Constructor de landing pages de alta conversión", 24.99, "https://landingbuilder.example.com", "https://landingbuilder.example.com/demo"),
-            ("MarketResearch", "Análisis de mercado y competencia", 33.99, "https://marketresearch.example.com", "https://marketresearch.example.com/demo"),
+            ("SocialBoost", "Automatización de publicaciones en redes sociales", 32.99, "https://socialboost.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("EmailCampaigner", "Creador de campañas de email marketing", 28.99, "https://emailcampaigner.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("SEOOptimizer", "Herramienta de optimización SEO con auditorías", 45.99, "https://seooptimizer.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("ContentPlanner", "Planificador de contenido para blogs y redes", 19.99, "https://contentplanner.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("AdMetrics", "Análisis de métricas de campañas publicitarias", 37.99, "https://admetrics.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("LeadGenerator", "Captador automático de leads calificados", 54.99, "https://leadgenerator.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("InfluencerHub", "Gestor de colaboraciones con influencers", 41.99, "https://influencerhub.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("BrandMonitor", "Monitoreo de marca y menciones en internet", 29.99, "https://brandmonitor.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("LandingBuilder", "Constructor de landing pages de alta conversión", 24.99, "https://landingbuilder.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("MarketResearch", "Análisis de mercado y competencia", 33.99, "https://marketresearch.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
             
             # Educación
-            ("LearningPath", "Plataforma de cursos online interactivos", 44.99, "https://learningpath.example.com", "https://learningpath.example.com/demo"),
-            ("QuizMaster", "Creador de exámenes y evaluaciones", 16.99, "https://quizmaster.example.com", "https://quizmaster.example.com/demo"),
-            ("StudentTracker", "Sistema de seguimiento de progreso estudiantil", 38.99, "https://studenttracker.example.com", "https://studenttracker.example.com/demo"),
-            ("VirtualClassroom", "Aula virtual con videoconferencia integrada", 52.99, "https://virtualclassroom.example.com", "https://virtualclassroom.example.com/demo"),
-            ("GradeBook Pro", "Libro de calificaciones digital para profesores", 21.99, "https://gradebook.example.com", "https://gradebook.example.com/demo"),
-            ("LanguageLab", "Laboratorio de idiomas con reconocimiento de voz", 31.99, "https://languagelab.example.com", "https://languagelab.example.com/demo"),
-            ("MathTutor AI", "Tutor de matemáticas con inteligencia artificial", 26.99, "https://mathtutor.example.com", "https://mathtutor.example.com/demo"),
-            ("LibraryManager", "Sistema de gestión de bibliotecas escolares", 35.99, "https://librarymanager.example.com", "https://librarymanager.example.com/demo"),
-            ("AssignmentHub", "Plataforma de entrega y revisión de tareas", 23.99, "https://assignmenthub.example.com", "https://assignmenthub.example.com/demo"),
-            ("CertificateGen", "Generador automático de certificados", 14.99, "https://certificategen.example.com", "https://certificategen.example.com/demo"),
+            ("LearningPath", "Plataforma de cursos online interactivos", 44.99, "https://learningpath.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("QuizMaster", "Creador de exámenes y evaluaciones", 16.99, "https://quizmaster.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("StudentTracker", "Sistema de seguimiento de progreso estudiantil", 38.99, "https://studenttracker.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("VirtualClassroom", "Aula virtual con videoconferencia integrada", 52.99, "https://virtualclassroom.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("GradeBook Pro", "Libro de calificaciones digital para profesores", 21.99, "https://gradebook.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("LanguageLab", "Laboratorio de idiomas con reconocimiento de voz", 31.99, "https://languagelab.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("MathTutor AI", "Tutor de matemáticas con inteligencia artificial", 26.99, "https://mathtutor.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("LibraryManager", "Sistema de gestión de bibliotecas escolares", 35.99, "https://librarymanager.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("AssignmentHub", "Plataforma de entrega y revisión de tareas", 23.99, "https://assignmenthub.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("CertificateGen", "Generador automático de certificados", 14.99, "https://certificategen.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
             
             # Diseño
-            ("DesignStudio Pro", "Suite completa de diseño gráfico en la nube", 49.99, "https://designstudio.example.com", "https://designstudio.example.com/demo"),
-            ("ColorPalette AI", "Generador de paletas de colores con IA", 12.99, "https://colorpalette.example.com", "https://colorpalette.example.com/demo"),
-            ("MockupBuilder", "Creador de mockups profesionales", 27.99, "https://mockupbuilder.example.com", "https://mockupbuilder.example.com/demo"),
-            ("LogoMaker Plus", "Diseñador de logos inteligente", 34.99, "https://logomaker.example.com", "https://logomaker.example.com/demo"),
-            ("IconLibrary Pro", "Biblioteca de +10,000 iconos vectoriales", 19.99, "https://iconlibrary.example.com", "https://iconlibrary.example.com/demo"),
-            ("PhotoEditor AI", "Editor de fotos con herramientas de IA", 42.99, "https://photoeditor.example.com", "https://photoeditor.example.com/demo"),
-            ("TypographyTool", "Herramienta de tipografía y fuentes", 17.99, "https://typographytool.example.com", "https://typographytool.example.com/demo"),
-            ("BannerDesigner", "Diseñador de banners para redes sociales", 22.99, "https://bannerdesigner.example.com", "https://bannerdesigner.example.com/demo"),
-            ("UIKitBuilder", "Constructor de UI kits personalizados", 39.99, "https://uikitbuilder.example.com", "https://uikitbuilder.example.com/demo"),
-            ("AnimationStudio", "Creador de animaciones 2D", 54.99, "https://animationstudio.example.com", "https://animationstudio.example.com/demo"),
+            ("DesignStudio Pro", "Suite completa de diseño gráfico en la nube", 49.99, "https://designstudio.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("ColorPalette AI", "Generador de paletas de colores con IA", 12.99, "https://colorpalette.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("MockupBuilder", "Creador de mockups profesionales", 27.99, "https://mockupbuilder.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("LogoMaker Plus", "Diseñador de logos inteligente", 34.99, "https://logomaker.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("IconLibrary Pro", "Biblioteca de +10,000 iconos vectoriales", 19.99, "https://iconlibrary.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("PhotoEditor AI", "Editor de fotos con herramientas de IA", 42.99, "https://photoeditor.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("TypographyTool", "Herramienta de tipografía y fuentes", 17.99, "https://typographytool.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("BannerDesigner", "Diseñador de banners para redes sociales", 22.99, "https://bannerdesigner.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("UIKitBuilder", "Constructor de UI kits personalizados", 39.99, "https://uikitbuilder.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("AnimationStudio", "Creador de animaciones 2D", 54.99, "https://animationstudio.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
             
             # Desarrollo
-            ("CodeReview AI", "Revisor automático de código con IA", 37.99, "https://codereview.example.com", "https://codereview.example.com/demo"),
-            ("APITester Pro", "Herramienta de testing de APIs RESTful", 29.99, "https://apitester.example.com", "https://apitester.example.com/demo"),
-            ("DatabaseDesigner", "Diseñador visual de bases de datos", 44.99, "https://dbdesigner.example.com", "https://dbdesigner.example.com/demo"),
-            ("GitFlow Manager", "Gestor de flujos de trabajo Git", 24.99, "https://gitflowmanager.example.com", "https://gitflowmanager.example.com/demo"),
-            ("DocGenerator", "Generador automático de documentación técnica", 19.99, "https://docgenerator.example.com", "https://docgenerator.example.com/demo"),
-            ("DeploymentHub", "Plataforma de despliegue continuo", 52.99, "https://deploymenthub.example.com", "https://deploymenthub.example.com/demo"),
-            ("BugTracker Elite", "Sistema avanzado de seguimiento de bugs", 34.99, "https://bugtracker.example.com", "https://bugtracker.example.com/demo"),
-            ("PerformanceMonitor", "Monitor de rendimiento de aplicaciones", 41.99, "https://perfmonitor.example.com", "https://perfmonitor.example.com/demo"),
-            ("CodeSnippet Library", "Biblioteca de snippets de código reutilizables", 14.99, "https://codesnippet.example.com", "https://codesnippet.example.com/demo"),
-            ("SecurityScanner", "Escáner de vulnerabilidades de seguridad", 49.99, "https://securityscanner.example.com", "https://securityscanner.example.com/demo"),
+            ("CodeReview AI", "Revisor automático de código con IA", 37.99, "https://codereview.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("APITester Pro", "Herramienta de testing de APIs RESTful", 29.99, "https://apitester.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("DatabaseDesigner", "Diseñador visual de bases de datos", 44.99, "https://dbdesigner.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("GitFlow Manager", "Gestor de flujos de trabajo Git", 24.99, "https://gitflowmanager.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("DocGenerator", "Generador automático de documentación técnica", 19.99, "https://docgenerator.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("DeploymentHub", "Plataforma de despliegue continuo", 52.99, "https://deploymenthub.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("BugTracker Elite", "Sistema avanzado de seguimiento de bugs", 34.99, "https://bugtracker.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("PerformanceMonitor", "Monitor de rendimiento de aplicaciones", 41.99, "https://perfmonitor.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("CodeSnippet Library", "Biblioteca de snippets de código reutilizables", 14.99, "https://codesnippet.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
+            ("SecurityScanner", "Escáner de vulnerabilidades de seguridad", 49.99, "https://securityscanner.example.com", "https://www.w3schools.com/html/mov_bbb.mp4"),
         ]
         
         apps = []
@@ -196,17 +199,45 @@ def seed_database(db: Session = Depends(get_db)):
             db.add(app)
             apps.append(app)
         
+        # CALCULADORA PRO (App Demo embebida) - Creada por dev@test.com
+        calculadora_vendor = vendors[0]  # dev@test.com es el primer vendor
+        calculadora = App(
+            nombre="CalculadoraPro",
+            descripcion="Calculadora profesional con funciones avanzadas. Modo DEMO gratuito (suma/resta) y modo PRO ($9.99) con multiplicación/división. Autenticación automática post-compra.",
+            categoria_id=categorias_cache["Productividad"].id,
+            url_aplicacion="http://localhost:5173/demo-calc/",
+            url_video="https://www.w3schools.com/html/mov_bbb.mp4",
+            propietario_id=calculadora_vendor.id,
+            precio=9.99,
+            imagen_portada="https://picsum.photos/seed/calc999/400/300",
+            plantilla_credenciales=json.dumps({
+                "username": "calcpro_user",
+                "password": "pro2024",
+                "activation_code": "CALCPRO-FULL-ACCESS"
+            })
+        )
+        db.add(calculadora)
+        apps.append(calculadora)
+        
         db.commit()
         
-        # COMPRAS (120 compras en últimos 6 meses, distribución temporal)
+        # COMPRAS (1000+ compras distribuidas temporalmente en últimos 6 meses)
         base_date = datetime.now() - timedelta(days=180)
-        for i in range(120):
-            # Más compras recientes (distribución exponencial)
+        test_buyer = buyers[0]  # comprador@test.com
+        
+        print("📦 Generando 1000+ compras coherentes...")
+        
+        for i in range(1050):  # 1050 compras para superar el requisito
+            # Distribución temporal: más compras recientes (exponencial)
             days_ago = int(180 * (1 - random.random() ** 2))
             purchase_date = base_date + timedelta(days=days_ago)
             
             buyer = random.choice(buyers)
             app = random.choice(apps)
+            
+            # RESTRICCIÓN: comprador@test.com NO debe comprar CalculadoraPro
+            if buyer.id == test_buyer.id and app.nombre == "CalculadoraPro":
+                continue  # Saltar esta compra
             
             # Generar credenciales únicas
             credentials = json.dumps({
@@ -227,12 +258,18 @@ def seed_database(db: Session = Depends(get_db)):
             db.add(payment)
         
         db.commit()
+        print(f"✅ {db.query(Payment).count()} compras generadas")
         
-        # REVIEWS (50 reviews con distribución realista de ratings)
-        confirmed_payments = db.query(Payment).filter(Payment.estado == "confirmado").limit(50).all()
+        # REVIEWS (generar reviews para ~60% de las compras)
+        all_payments = db.query(Payment).filter(Payment.estado == "confirmado").all()
+        review_count = 0
         
-        rating_distribution = [5]*17 + [4]*15 + [3]*10 + [2]*5 + [1]*3  # 35% 5★, 30% 4★, 20% 3★, 10% 2★, 5% 1★
-        random.shuffle(rating_distribution)
+        print("📝 Generando reviews...")
+        
+        # Distribución de ratings realista: 40% 5★, 30% 4★, 20% 3★, 7% 2★, 3% 1★
+        rating_weights = [40, 30, 20, 7, 3]
+        # Distribución de ratings realista: 40% 5★, 30% 4★, 20% 3★, 7% 2★, 3% 1★
+        rating_weights = [40, 30, 20, 7, 3]
         
         comments_positive = [
             "Excelente aplicación, cumple con todas mis expectativas",
@@ -240,137 +277,111 @@ def seed_database(db: Session = Depends(get_db)):
             "La mejor inversión que he hecho en software",
             "Increíble funcionalidad, ahorra mucho tiempo",
             "Interfaz intuitiva y potente, me encanta",
+            "Superó mis expectativas, muy profesional",
+            "Exactamente lo que necesitaba",
+            "Calidad premium, vale cada centavo"
         ]
         
         comments_neutral = [
             "Buena app pero le falta alguna funcionalidad",
             "Cumple lo prometido, aunque tiene margen de mejora",
             "Funciona bien pero el precio es un poco alto",
+            "Está bien, nada extraordinario",
+            "Aceptable para el uso básico"
         ]
         
         comments_negative = [
             "Esperaba más funcionalidades por el precio",
             "Tiene bugs que deberían corregirse pronto",
+            "No cumple todas las promesas",
+            "Decepcionante en algunos aspectos"
         ]
         
-        for i, payment in enumerate(confirmed_payments):
-            rating_value = rating_distribution[i % len(rating_distribution)]
-            
-            if rating_value >= 4:
-                comment = random.choice(comments_positive)
-            elif rating_value == 3:
-                comment = random.choice(comments_neutral)
-            else:
-                comment = random.choice(comments_negative)
-            
-            review = Review(
-                aplicacion_id=payment.aplicacion_id,
-                autor_id=payment.comprador_id,
-                calificacion=rating_value,
-                comentario=comment,
-                fecha_creacion=payment.fecha_creacion + timedelta(days=random.randint(1, 7))
-            )
-            db.add(review)
+        for payment in all_payments:
+            # 60% de probabilidad de tener review
+            if random.random() < 0.6:
+                rating = random.choices([5, 4, 3, 2, 1], weights=rating_weights)[0]
+                
+                if rating >= 4:
+                    comment = random.choice(comments_positive)
+                elif rating == 3:
+                    comment = random.choice(comments_neutral)
+                else:
+                    comment = random.choice(comments_negative)
+                
+                review = Review(
+                    aplicacion_id=payment.aplicacion_id,
+                    autor_id=payment.comprador_id,
+                    calificacion=rating,
+                    comentario=comment,
+                    fecha_creacion=payment.fecha_creacion + timedelta(days=random.randint(1, 7))
+                )
+                db.add(review)
+                review_count += 1
         
         db.commit()
+        print(f"✅ {review_count} reviews generadas")
         
-        # DATOS EXTRAS PARA USUARIOS DE PRUEBA (PRESENTACION)
-        test_vendor = db.query(User).filter(User.correo == "vendor@example.com").first()
-        test_buyer = db.query(User).filter(User.correo == "buyer@example.com").first()
+        # Configurar datos extras para usuarios de demostración
+        dev_user = db.query(User).filter(User.correo == "dev@test.com").first()
+        buyer_user = db.query(User).filter(User.correo == "comprador@test.com").first()
         
-        if test_vendor and test_buyer:
-            vendor_apps = db.query(App).filter(App.propietario_id == test_vendor.id).all()
-            
-            # MUCHAS MAS VENTAS para el vendor de prueba (80 compras adicionales)
-            for _ in range(80):
-                app = random.choice(vendor_apps) if vendor_apps else random.choice(apps)
-                buyer_random = random.choice(buyers)
-                days_ago = random.randint(1, 180)
+        if dev_user and buyer_user:
+            # Dar al comprador demo algunas compras variadas (15 compras)
+            demo_apps = db.query(App).filter(App.nombre != "CalculadoraPro").limit(15).all()
+            for app in demo_apps:
+                days_ago = random.randint(5, 90)
                 purchase_date = datetime.now() - timedelta(days=days_ago)
                 
                 credentials = json.dumps({
-                    "username": f"user_{random.randint(1000, 9999)}",
+                    "username": f"demo_{app.id}",
                     "password": f"pwd{random.randint(1000, 9999)}",
-                    "api_key": f"ak-{random.randint(100000000, 999999999)}"
+                    "api_key": f"ak-demo-{random.randint(100000, 999999)}"
                 })
                 
                 payment = Payment(
                     aplicacion_id=app.id,
-                    comprador_id=buyer_random.id,
+                    comprador_id=buyer_user.id,
                     estado="confirmado",
-                    codigo_qr=f"QR-{random.randint(100000, 999999)}",
+                    codigo_qr=f"QR-DEMO-{random.randint(100000, 999999)}",
                     credenciales=credentials,
                     fecha_creacion=purchase_date
                 )
                 db.add(payment)
                 
-                # 85% tienen review para tener muchos datos
-                if random.random() < 0.85:
-                    rating = random.choices([5,4,3,2,1], weights=[45,30,15,7,3])[0]
-                    comments = {
-                        5: ["Excelente app, muy profesional", "La mejor de su categoria", "100% recomendada", "Increible calidad", "Superó mis expectativas"],
-                        4: ["Muy buena aplicacion", "Funciona perfectamente", "Gran herramienta", "Muy recomendable", "Buena compra"],
-                        3: ["Cumple su funcion", "Aceptable", "Normal", "Esta bien", "Podria mejorar"],
-                        2: ["Le falta mejorar", "Tiene bugs", "No es lo que esperaba", "Regular", "Decepcionante"],
-                        1: ["Mala experiencia", "No funciona bien", "Decepcionante", "No vale la pena", "Pesima"]
-                    }
-                    
+                # Agregar review
+                if random.random() < 0.7:
+                    rating = random.choices([5, 4, 3], weights=[50, 35, 15])[0]
                     review = Review(
                         aplicacion_id=app.id,
-                        autor_id=buyer_random.id,
+                        autor_id=buyer_user.id,
                         calificacion=rating,
-                        comentario=random.choice(comments[rating]),
-                        fecha_creacion=purchase_date + timedelta(days=random.randint(1, 5))
-                    )
-                    db.add(review)
-            
-            # El buyer de prueba tiene 25 compras variadas (más datos)
-            for _ in range(25):
-                app = random.choice(apps)
-                days_ago = random.randint(1, 120)
-                purchase_date = datetime.now() - timedelta(days=days_ago)
-                
-                credentials = json.dumps({
-                    "username": f"ana_user_{app.id}",
-                    "password": f"pwd{random.randint(1000, 9999)}",
-                    "api_key": f"ak-{random.randint(100000000, 999999999)}"
-                })
-                
-                payment = Payment(
-                    aplicacion_id=app.id,
-                    comprador_id=test_buyer.id,
-                    estado="confirmado",
-                    codigo_qr=f"QR-{random.randint(100000, 999999)}",
-                    credenciales=credentials,
-                    fecha_creacion=purchase_date
-                )
-                db.add(payment)
-                
-                # 60% tienen review del buyer de prueba
-                if random.random() < 0.6:
-                    rating = random.choices([5,4,3], weights=[50,35,15])[0]
-                    review = Review(
-                        aplicacion_id=app.id,
-                        autor_id=test_buyer.id,
-                        calificacion=rating,
-                        comentario=f"Review de prueba - Rating {rating}",
+                        comentario=random.choice(comments_positive if rating >= 4 else comments_neutral),
                         fecha_creacion=purchase_date + timedelta(days=random.randint(1, 3))
                     )
                     db.add(review)
             
             db.commit()
+            print(f"✅ Usuarios de demostración configurados")
+            print(f"   - dev@test.com: Dueño de CalculadoraPro + {db.query(App).filter(App.propietario_id == dev_user.id).count()} apps")
+            print(f"   - comprador@test.com: {db.query(Payment).filter(Payment.comprador_id == buyer_user.id).count()} compras (NO incluye CalculadoraPro)")
         
         total_purchases = db.query(Payment).count()
         total_reviews = db.query(Review).count()
         
         return {
-            "message": "✅ Base de datos poblada exitosamente",
+            "message": "✅ Base de datos poblada exitosamente con datos coherentes para demostración",
             "users": len(vendors) + len(buyers),
             "vendors": len(vendors),
             "buyers": len(buyers),
             "apps": len(apps),
             "purchases": total_purchases,
-            "reviews": total_reviews
+            "reviews": total_reviews,
+            "demo_users": {
+                "developer": "dev@test.com (password: password)",
+                "buyer": "comprador@test.com (password: password)",
+                "note": "comprador@test.com NO ha comprado CalculadoraPro"
+            }
         }
         
     except Exception as e:

@@ -60,7 +60,7 @@ export const AppForm = () => {
   }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.nombre]: e.target.value }));
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async () => {
@@ -87,7 +87,7 @@ export const AppForm = () => {
         fullWidth
         label="Nombre"
         name="name"
-        value={form.nombre}
+        value={form.name}
         onChange={handleChange}
         margin="normal"
       />
@@ -96,7 +96,7 @@ export const AppForm = () => {
         fullWidth
         label="Descripción"
         name="description"
-        value={form.descripcion}
+        value={form.description}
         onChange={handleChange}
         margin="normal"
       />
@@ -105,7 +105,7 @@ export const AppForm = () => {
         fullWidth
         label="Categoría"
         name="category"
-        value={form.categoria}
+        value={form.category}
         onChange={handleChange}
         margin="normal"
       />
@@ -114,7 +114,7 @@ export const AppForm = () => {
         fullWidth
         label="URL de la app"
         name="app_url"
-        value={form.url_aplicacion}
+        value={form.app_url}
         onChange={handleChange}
         margin="normal"
       />
@@ -123,7 +123,7 @@ export const AppForm = () => {
         fullWidth
         label="URL de la imagen de portada"
         name="cover_image"
-        value={form.imagen_portada}
+        value={form.cover_image}
         onChange={handleChange}
         margin="normal"
         helperText="Opcional: una imagen para mostrar en la lista de apps"
@@ -134,7 +134,7 @@ export const AppForm = () => {
         label="Precio (USD)"
         name="price"
         type="number"
-        value={form.precio}
+        value={form.price}
         onChange={handleChange}
         margin="normal"
         helperText="Ingresa 0 para apps gratuitas"
@@ -145,7 +145,7 @@ export const AppForm = () => {
         fullWidth
         label="URL de Demo (opcional)"
         name="demo_url"
-        value={form.url_video}
+        value={form.demo_url}
         onChange={handleChange}
         margin="normal"
         helperText="Opcional: URL de una versión demo de tu app"

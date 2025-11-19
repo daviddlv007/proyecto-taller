@@ -3,10 +3,12 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: appswap-postgres-dev
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: appswap
-      POSTGRES_PASSWORD: appswap123
-      POSTGRES_DB: appswap_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -14,7 +16,7 @@ services:
     networks:
       - appswap-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U appswap"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,9 +29,16 @@ services:
     container_name: appswap-backend-dev
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql://appswap:appswap123@postgres:5432/appswap_db
-      - SECRET_KEY=dev-secret-key-not-for-production
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - APP_SUCCESS_URL=${APP_SUCCESS_URL}
+      - APP_CANCEL_URL=${APP_CANCEL_URL}
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,8 +56,10 @@ services:
     working_dir: /app
     ports:
       - "5173:5173"
+    env_file:
+      - .env
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=${VITE_API_URL}
     volumes:
       - ./appswap:/app
       - /app/node_modules

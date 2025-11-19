@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { api } from '../../services/api';
+import { API_BASE_URL } from '../../config/api';
 import {
   Box,
   Typography,
@@ -20,20 +21,28 @@ import {
   Collapse,
   Button,
   IconButton,
+  Alert,
 } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import ExpandLess from '@mui/icons-material/ExpandLess';
 import type { App } from '../../types/types';
 import { BuyerAppCard } from './BuyerAppCard';
 
 export default function Apps() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [aiSearchQuery, setAiSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [priceRange, setPriceRange] = useState<number[]>([0, 1000]);
   const [minRating, setMinRating] = useState<number>(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [showAiSearch, setShowAiSearch] = useState(false);
+  const [useAiSearch, setUseAiSearch] = useState(false);
+  const [aiResults, setAiResults] = useState<App[]>([]);
 
   const {
     data: apps = [],
@@ -49,9 +58,38 @@ export default function Apps() {
     },
   });
 
+  // Mutación para búsqueda con IA
+  const aiSearchMutation = useMutation({
+    mutationFn: async (query: string) => {
+      const response = await fetch(`${API_BASE_URL}/search/ai-search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      if (!response.ok) throw new Error('AI search failed');
+      const data = await response.json();
+      return data.results;
+    },
+    onSuccess: (results) => {
+      setAiResults(results);
+      setUseAiSearch(true);
+    },
+  });
+
+  const handleAiSearch = () => {
+    if (aiSearchQuery.trim()) {
+      aiSearchMutation.mutate(aiSearchQuery);
+    }
+  };
+
+  const handleClearAiSearch = () => {
+    setAiSearchQuery('');
+    setUseAiSearch(false);
+    setAiResults([]);
+  };
+
   // Obtener reviews para calcular ratings - deshabilitado porque no hay endpoint público
   // Las reviews se muestran solo después de comprar
-  const allReviews: any[] = [];
 
   // Calcular rating promedio por app
   const appRatings = useMemo(() => {
@@ -76,7 +114,11 @@ export default function Apps() {
   }, [apps]);
 
   // Filtrar y buscar apps
-  const filteredApps = useMemo(() => {
+  const displayApps = useMemo(() => {
+    if (useAiSearch) {
+      return aiResults;
+    }
+    
     return apps.filter((app) => {
       // Búsqueda por nombre o descripción
       const matchesSearch =
@@ -96,7 +138,7 @@ export default function Apps() {
 
       return matchesSearch && matchesCategory && matchesPrice && matchesRating;
     });
-  }, [apps, searchTerm, categoryFilter, priceRange, minRating, appRatings]);
+  }, [apps, useAiSearch, aiResults, searchTerm, categoryFilter, priceRange, minRating, appRatings]);
 
   const handleClearFilters = () => {
     setSearchTerm('');
@@ -173,6 +215,66 @@ export default function Apps() {
           ),
         }}
       />
+
+      {/* Búsqueda con IA - Collapsible */}
+      <Card sx={{ mb: 2 }}>
+        <CardContent>
+          <Box 
+            display="flex" 
+            alignItems="center" 
+            justifyContent="space-between"
+            sx={{ cursor: 'pointer' }}
+            onClick={() => setShowAiSearch(!showAiSearch)}
+          >
+            <Box display="flex" alignItems="center" gap={1}>
+              <AutoAwesomeIcon color="primary" />
+              <Typography variant="subtitle1" fontWeight={600}>
+                Búsqueda Inteligente con IA
+              </Typography>
+            </Box>
+            <IconButton size="small">
+              {showAiSearch ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+          </Box>
+          
+          <Collapse in={showAiSearch}>
+            <Box mt={2}>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                Describe qué tipo de app necesitas en lenguaje natural
+              </Typography>
+              <Box display="flex" gap={1}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  placeholder="ej: 'app para calcular impuestos', 'herramienta de productividad'..."
+                  value={aiSearchQuery}
+                  onChange={(e) => setAiSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAiSearch()}
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleAiSearch}
+                  disabled={!aiSearchQuery.trim() || aiSearchMutation.isPending}
+                  startIcon={aiSearchMutation.isPending ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
+                >
+                  Buscar
+                </Button>
+                {useAiSearch && (
+                  <Button variant="outlined" onClick={handleClearAiSearch} startIcon={<ClearIcon />}>
+                    Limpiar
+                  </Button>
+                )}
+              </Box>
+              {useAiSearch && (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  Mostrando {aiResults.length} resultados de búsqueda IA para: "{aiSearchQuery}"
+                </Alert>
+              )}
+            </Box>
+          </Collapse>
+        </CardContent>
+      </Card>
 
       {/* Botón para mostrar/ocultar filtros */}
       <Box display="flex" gap={1} mb={2}>
@@ -301,11 +403,11 @@ export default function Apps() {
       {/* Resultados */}
       <Box mb={2}>
         <Typography variant="body2" color="text.secondary">
-          Mostrando {filteredApps.length} de {apps.length} aplicaciones
+          Mostrando {displayApps.length} de {apps.length} aplicaciones
         </Typography>
       </Box>
 
-      {filteredApps.length === 0 ? (
+      {displayApps.length === 0 ? (
         <Box textAlign="center" py={8}>
           <StorefrontIcon sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }} />
           <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -322,7 +424,7 @@ export default function Apps() {
         </Box>
       ) : (
         <Grid container spacing={2} alignItems="stretch">
-          {filteredApps.map((app) => (
+          {displayApps.map((app) => (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={app.id} sx={{ display: 'flex' }}>
               <BuyerAppCard app={app} />
             </Grid>

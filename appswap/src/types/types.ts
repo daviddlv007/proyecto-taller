@@ -7,6 +7,7 @@ export interface App {
   imagen_portada?: string;
   precio: number;
   url_video?: string;
+  video_url?: string;
 }
 
 export interface Payment {

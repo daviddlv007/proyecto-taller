@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { API_BASE_URL } from '../../config/api';
 import {
   Typography,
   Card,
@@ -42,7 +43,7 @@ function Sales() {
     queryKey: ['vendor-sales'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/desarrollador/sales', {
+      const response = await fetch(`${API_BASE_URL}/desarrollador/sales`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -148,7 +149,7 @@ function Sales() {
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={formatCurrency(sale.precio)} color="success" size="small" />
+                        <Chip label={formatCurrency(sale.price)} color="success" size="small" />
                       </TableCell>
                       <TableCell align="center">
                         <Typography variant="caption" color="text.secondary">

@@ -37,11 +37,11 @@ export const AppStatsModal = ({ open, onClose, appId }: AppStatsModalProps) => {
       <DialogContent>
         {stats ? (
           <Box>
-            <Typography variant="body2">Descargas: {stats.downloads}</Typography>
-            <Typography variant="body2">Reseñas: {stats.reviews}</Typography>
-            <Typography variant="body2">Rating promedio: {stats.average_rating}</Typography>
+            <Typography variant="body2">Descargas: {stats.descargas}</Typography>
+            <Typography variant="body2">Reseñas: {stats.resenas}</Typography>
+            <Typography variant="body2">Rating promedio: {stats.calificacion_promedio.toFixed(2)}</Typography>
             <Typography variant="body2">
-              Pagos recibidos: ${stats.payments_received.toLocaleString()}
+              Pagos recibidos: ${stats.pagos_recibidos.toLocaleString()}
             </Typography>
           </Box>
         ) : (

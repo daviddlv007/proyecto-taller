@@ -35,7 +35,7 @@ export const AppsList = () => {
   };
 
   const handleEdit = (app: App) => {
-    navigate(`/vendor/apps/${app.id}/edit`);
+    navigate(`/desarrollador/apps/${app.id}/edit`);
   };
 
   return (

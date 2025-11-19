@@ -67,3 +67,4 @@ backend/ml_models/models/*.joblib
 
 # OS
 Thumbs.db
+

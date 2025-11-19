@@ -1,7 +1,6 @@
 import { toast } from 'react-toastify';
 import type { App, Payment, Review, Stats } from '../types/types';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { API_BASE_URL } from '../config/api';
 
 // Función para obtener headers con autenticación
 const getAuthHeaders = () => {

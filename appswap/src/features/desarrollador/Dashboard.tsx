@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
+import { API_BASE_URL } from '../../config/api';
 import {
   Box,
   Typography,
@@ -56,7 +57,7 @@ export default function Dashboard() {
     queryKey: ['vendor-sales'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/desarrollador/sales', {
+      const response = await fetch(`${API_BASE_URL}/desarrollador/sales`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

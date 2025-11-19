@@ -1,6 +1,6 @@
 // components/AppDetailsModal.tsx
-import React from 'react';
-import { Dialog, DialogContent, DialogTitle, Typography, Box, IconButton } from '@mui/material';
+import {
+  Dialog, DialogContent, DialogTitle, Typography, Box, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import type { App } from '../../../types/types';
 
@@ -23,12 +23,16 @@ export const AppDetailsModal = ({ open, onClose, app }: AppDetailsModalProps) =>
       </DialogTitle>
 
       <DialogContent>
-        <Box
-          component="img"
-          src={app.imagen_portada || 'https://via.placeholder.com/600x300?text=Sin+imagen'}
-          alt={app.nombre}
-          sx={{ width: '100%', height: 300, objectFit: 'cover', borderRadius: 1, mb: 2 }}
-        />
+        <Box sx={{ width: '100%', height: 300, borderRadius: 1, mb: 2, overflow: 'hidden' }}>
+          <video
+            src={app.video_url || 'https://www.w3schools.com/html/mov_bbb.mp4'}
+            controls
+            autoPlay
+            muted
+            loop
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </Box>
 
         <Typography variant="body2" color="text.secondary" mb={1}>
           {app.categoria}

@@ -4,12 +4,14 @@ import { publicRoutes } from './features/public/routes';
 import { authRoutes } from './features/auth/routes';
 import { desarrolladorRoutes } from './features/desarrollador/routes';
 import { usuarioRoutes } from './features/usuario/routes';
+import DemoCalc from './pages/DemoCalc';
 
 export default function AppRoutes() {
   const routes = [
     ...publicRoutes,
     { path: '/desarrollador', element: <Navigate to="/desarrollador/dashboard" replace /> },
     { path: '/usuario', element: <Navigate to="/usuario/home" replace /> },
+    { path: '/demo-calc', element: <DemoCalc /> },
     ...authRoutes,
     ...desarrolladorRoutes,
     ...usuarioRoutes,

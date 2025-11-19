@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { api } from '../../services/api';
@@ -21,6 +21,11 @@ import {
   IconButton,
   Tooltip,
   Chip,
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -30,7 +35,10 @@ import KeyIcon from '@mui/icons-material/Key';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import InfoIcon from '@mui/icons-material/Info';
 import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import type { Review as ReviewType } from '../../types/types';
+import { API_BASE_URL } from '../../config/api';
 
 interface Purchase {
   id: number;
@@ -40,6 +48,7 @@ interface Purchase {
   app_description: string;
   app_url: string;
   cover_image?: string;
+  imagen_portada?: string;
   price: number;
   credentials?: string;
   purchase_date: string;
@@ -53,6 +62,10 @@ function Purchases() {
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
   const [rating, setRating] = useState<number | null>(5);
   const [comment, setComment] = useState('');
+  
+  // Estados para búsqueda y filtrado
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   const { data: purchases = [] } = useQuery<Purchase[]>({
     queryKey: ['buyerPurchases'],
@@ -63,7 +76,7 @@ function Purchases() {
     queryKey: ['myReviews'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/usuario/reviews', {
+      const response = await fetch(`${API_BASE_URL}/usuario/reviews`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -76,7 +89,7 @@ function Purchases() {
   const createReviewMutation = useMutation({
     mutationFn: async (data: { app_id: number; rating: number; comment: string }) => {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/usuario/reviews', {
+      const response = await fetch(`${API_BASE_URL}/usuario/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -149,8 +162,29 @@ function Purchases() {
   };
 
   const hasReview = (appId: number) => {
-    return (myReviews as ReviewType[]).some((review: ReviewType) => review.app_id === appId);
+    return (myReviews as ReviewType[]).some((review: ReviewType) => review.aplicacion_id === appId);
   };
+
+  // Filtrado y búsqueda
+  const filteredPurchases = useMemo(() => {
+    return purchases.filter((purchase: Purchase) => {
+      // Filtro de búsqueda
+      const matchesSearch = searchTerm === '' || 
+        purchase.app_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        purchase.app_description.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Filtro de categoría
+      const matchesCategory = categoryFilter === 'all' || purchase.app_category === categoryFilter;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [purchases, searchTerm, categoryFilter]);
+
+  // Obtener categorías únicas
+  const uniqueCategories = useMemo(() => {
+    const categories = purchases.map((p: Purchase) => p.app_category);
+    return Array.from(new Set(categories));
+  }, [purchases]);
 
   return (
     <Box p={3}>
@@ -162,10 +196,56 @@ function Purchases() {
             Mis Compras
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Aplicaciones que has adquirido
+            {purchases.length} aplicaciones adquiridas
           </Typography>
         </div>
       </Box>
+
+      {/* Búsqueda y filtros */}
+      <Box mb={3} display="flex" gap={2} flexWrap="wrap">
+        <TextField
+          placeholder="Buscar por nombre o descripción..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          size="small"
+          sx={{ flexGrow: 1, minWidth: 250 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+            endAdornment: searchTerm && (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={() => setSearchTerm('')}>
+                  <ClearIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel>Categoría</InputLabel>
+          <Select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            label="Categoría"
+          >
+            <MenuItem value="all">Todas las categorías</MenuItem>
+            {uniqueCategories.map((cat: string) => (
+              <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+
+      {/* Contador de resultados */}
+      {(searchTerm || categoryFilter !== 'all') && (
+        <Typography variant="body2" color="text.secondary" mb={2}>
+          Mostrando {filteredPurchases.length} de {purchases.length} compras
+        </Typography>
+      )}
 
       {purchases.length === 0 ? (
         <Box textAlign="center" py={8}>
@@ -177,9 +257,19 @@ function Purchases() {
             Explora la tienda y adquiere tus primeras aplicaciones
           </Typography>
         </Box>
+      ) : filteredPurchases.length === 0 ? (
+        <Box textAlign="center" py={8}>
+          <SearchIcon sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }} />
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No se encontraron compras
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Intenta con otros términos de búsqueda o filtros
+          </Typography>
+        </Box>
       ) : (
         <Grid container spacing={2}>
-          {purchases.map((purchase) => (
+          {filteredPurchases.map((purchase: Purchase) => (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={purchase.id}>
               <Card
                 sx={{

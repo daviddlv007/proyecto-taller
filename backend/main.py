@@ -4,6 +4,8 @@ import rutas_desarrollador
 import rutas_usuario
 import ml_endpoints
 import admin_routes
+import stripe_routes
+import ai_search_routes
 
 app = FastAPI(
     title="AppSwap API",
@@ -32,6 +34,8 @@ app.include_router(rutas_desarrollador.router)
 app.include_router(rutas_usuario.router)
 app.include_router(ml_endpoints.router)
 app.include_router(admin_routes.router)
+app.include_router(stripe_routes.router)
+app.include_router(ai_search_routes.router)
 
 @app.get("/")
 def read_root():

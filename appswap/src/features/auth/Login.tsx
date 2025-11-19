@@ -10,9 +10,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
+  Divider,
 } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../../config/api';
 
 export default function Login() {
   const { login } = useAuth();
@@ -23,6 +27,8 @@ export default function Login() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const handle = async () => {
     setError('');
@@ -53,6 +59,37 @@ export default function Login() {
       setError('Error al iniciar sesión');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetDatabase = async () => {
+    if (!confirm('⚠️ ADVERTENCIA: Esto borrará TODOS los datos y regenerará la base de datos con 1000+ ventas. ¿Continuar?')) {
+      return;
+    }
+
+    setResetting(true);
+    setError('');
+    setResetSuccess(false);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/reset-all`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al resetear la base de datos');
+      }
+
+      const data = await response.json();
+      console.log('✅ Reset completo:', data);
+      setResetSuccess(true);
+      alert(`✅ Reset exitoso!\n\n📊 Base de datos regenerada:\n- ${data.steps_completed['2_data_seeded'].users} usuarios\n- ${data.steps_completed['2_data_seeded'].apps} apps\n- ${data.steps_completed['2_data_seeded'].purchases} compras\n- ${data.steps_completed['2_data_seeded'].reviews} reviews\n\n🤖 Modelos ML entrenados y listos\n\n🔐 Usuarios de prueba:\n- dev@test.com / password (Desarrollador)\n- comprador@test.com / password (Usuario)`);
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error al resetear la base de datos');
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -125,24 +162,53 @@ export default function Login() {
         >
           🔧 Acceso Rápido (Desarrollo)
         </Typography>
-        <Box display="flex" gap={1} justifyContent="center">
+        
+        {resetSuccess && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            ✅ Base de datos reseteada exitosamente con 1000+ ventas
+          </Alert>
+        )}
+        
+        <Box display="flex" gap={1} justifyContent="center" mb={2}>
           <Button
             variant="outlined"
             size="small"
-            onClick={() => handleQuickLogin('vendor@example.com', '123456', 'desarrollador')}
-            disabled={loading}
+            onClick={() => handleQuickLogin('dev@test.com', 'password', 'desarrollador')}
+            disabled={loading || resetting}
           >
             Desarrollador Demo
           </Button>
           <Button
             variant="outlined"
             size="small"
-            onClick={() => handleQuickLogin('buyer@example.com', '123456', 'usuario')}
-            disabled={loading}
+            onClick={() => handleQuickLogin('comprador@test.com', 'password', 'usuario')}
+            disabled={loading || resetting}
           >
             Usuario Demo
           </Button>
         </Box>
+        
+        <Divider sx={{ my: 2 }}>
+          <Typography variant="caption" color="text.secondary">
+            Admin
+          </Typography>
+        </Divider>
+        
+        <Button
+          variant="contained"
+          color="warning"
+          size="small"
+          fullWidth
+          startIcon={resetting ? <CircularProgress size={16} color="inherit" /> : <RefreshIcon />}
+          onClick={handleResetDatabase}
+          disabled={loading || resetting}
+        >
+          {resetting ? 'Reseteando DB...' : '🔄 Reset DB + Seed + ML Train'}
+        </Button>
+        
+        <Typography variant="caption" display="block" textAlign="center" color="text.secondary" mt={1}>
+          Limpia, puebla (1000+ ventas) y entrena modelos ML
+        </Typography>
       </Box>
     </Box>
   );

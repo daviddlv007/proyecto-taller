@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
-import { api } from '../../services/api';
+import { API_BASE_URL } from '../../config/api';
 import {
   Card,
   CardContent,
@@ -16,14 +16,11 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Alert,
-  CircularProgress,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import InfoIcon from '@mui/icons-material/Info';
 import CloseIcon from '@mui/icons-material/Close';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { App } from '../../types/types';
 
 interface BuyerAppCardProps {
@@ -32,33 +29,38 @@ interface BuyerAppCardProps {
 
 export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
   const [openDetails, setOpenDetails] = useState(false);
-  const [openPurchase, setOpenPurchase] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
-  const [_generatedQR, setGeneratedQR] = useState('');
-  const [_paymentId, setPaymentId] = useState<number | null>(null);
-  const queryClient = useQueryClient();
 
   const handleExecuteApp = () => {
     setOpenPreview(true);
   };
 
-  // Mutación para crear el pago (instantáneo, sin necesidad de confirmación)
+  // Mutación para crear el pago con Stripe
   const createPaymentMutation = useMutation({
-    mutationFn: () => {
-      const qr = `QR${Date.now()}${Math.floor(Math.random() * 10000)}`;
-      return api.createPayment({ app_id: app.id, qr_code: qr });
+    mutationFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/payments/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ app_id: app.id })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al crear sesión de pago');
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
-      setGeneratedQR(data.qr_code);
-      setPaymentId(data.id);
-      queryClient.invalidateQueries({ queryKey: ['buyerPurchases'] });
-      queryClient.invalidateQueries({ queryKey: ['buyerPayments'] });
-      toast.success('¡Compra confirmada! La app ya está disponible en "Mis Compras"');
-      setTimeout(() => {
-        setOpenPurchase(false);
-        setGeneratedQR('');
-        setPaymentId(null);
-      }, 2000);
+      // Redirigir a Stripe Checkout
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        toast.error('No se pudo obtener la URL de pago');
+      }
     },
     onError: (error) => {
       toast.error(`Error al procesar el pago: ${(error as Error).message}`);
@@ -66,18 +68,9 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
   });
 
   const handleOpenPurchaseModal = () => {
-    setOpenPurchase(true);
-  };
-
-  const handleConfirmPurchase = () => {
+    // Directamente iniciar el proceso de compra
+    toast.info('Redirigiendo a Stripe Checkout...');
     createPaymentMutation.mutate();
-  };
-
-  const handleClosePurchaseModal = () => {
-    setOpenPurchase(false);
-    setGeneratedQR('');
-    setPaymentId(null);
-    createPaymentMutation.reset();
   };
 
   return (
@@ -113,7 +106,7 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
             <Chip label={app.categoria} size="small" color="primary" />
             <Typography variant="h6" color="success.main" fontWeight="bold">
-              ${app.precio.toFixed(2)}
+              ${app.precio?.toFixed(2) || '0.00'}
             </Typography>
           </Box>
         </CardContent>
@@ -158,11 +151,14 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
           </Box>
         </DialogTitle>
         <DialogContent>
-          <Box mb={2}>
-            <img
-              src={app.imagen_portada || 'https://via.placeholder.com/400x200?text=No+Image'}
-              alt={app.nombre}
-              style={{ width: '100%', borderRadius: 8 }}
+          <Box mb={2} sx={{ width: '100%', height: 300, borderRadius: 1, overflow: 'hidden' }}>
+            <video
+              src={app.video_url || 'https://www.w3schools.com/html/mov_bbb.mp4'}
+              controls
+              autoPlay
+              muted
+              loop
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </Box>
           <Chip label={app.categoria} color="primary" sx={{ mb: 2 }} />
@@ -207,104 +203,6 @@ export const BuyerAppCard = ({ app }: BuyerAppCardProps) => {
             title={app.nombre}
           />
         </DialogContent>
-      </Dialog>
-
-      {/* Modal de Compra */}
-      <Dialog open={openPurchase} onClose={handleClosePurchaseModal} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          <Box display="flex" alignItems="center" gap={1}>
-            <ShoppingCartIcon color="primary" />
-            Comprar: {app.nombre}
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          {createPaymentMutation.isPending && (
-            <Box display="flex" flexDirection="column" alignItems="center" py={4}>
-              <CircularProgress />
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                Procesando compra...
-              </Typography>
-            </Box>
-          )}
-
-          {createPaymentMutation.isError && (
-            <Box display="flex" flexDirection="column" alignItems="center" py={4}>
-              <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
-                Error al procesar la compra. Por favor, intenta nuevamente.
-              </Alert>
-            </Box>
-          )}
-
-          {createPaymentMutation.isSuccess && (
-            <Box display="flex" flexDirection="column" alignItems="center" py={4}>
-              <CheckCircleIcon sx={{ fontSize: 80, color: 'success.main' }} />
-              <Typography variant="h6" sx={{ mt: 2, color: 'success.main' }}>
-                ¡Compra confirmada!
-              </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mt: 1, textAlign: 'center' }}
-              >
-                La aplicación ya está disponible en "Mis Compras" con tus credenciales de acceso
-              </Typography>
-            </Box>
-          )}
-
-          {!createPaymentMutation.isPending &&
-            !createPaymentMutation.isSuccess &&
-            !createPaymentMutation.isError && (
-              <Box py={2}>
-                <Typography variant="body1" gutterBottom>
-                  Confirma la compra de esta aplicación:
-                </Typography>
-                <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 2, my: 2 }}>
-                  <Typography variant="h6" gutterBottom>
-                    {app.nombre}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" paragraph>
-                    {app.descripcion}
-                  </Typography>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Chip label={app.categoria} color="primary" size="small" />
-                    <Typography variant="h5" color="success.main" fontWeight="bold">
-                      ${app.precio.toFixed(2)}
-                    </Typography>
-                  </Box>
-                </Box>
-                <Alert severity="info">
-                  Al confirmar, se procesará el pago y recibirás credenciales de acceso
-                  instantáneamente.
-                </Alert>
-              </Box>
-            )}
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          {!createPaymentMutation.isSuccess ? (
-            <>
-              <Button onClick={handleClosePurchaseModal}>Cancelar</Button>
-              <Button
-                onClick={handleConfirmPurchase}
-                disabled={createPaymentMutation.isPending}
-                variant="contained"
-                startIcon={
-                  createPaymentMutation.isPending ? (
-                    <CircularProgress size={20} />
-                  ) : (
-                    <ShoppingCartIcon />
-                  )
-                }
-                color="success"
-              >
-                {createPaymentMutation.isPending ? 'Procesando...' : 'Confirmar Compra'}
-              </Button>
-            </>
-          ) : (
-            <Button onClick={handleClosePurchaseModal} variant="contained">
-              Cerrar
-            </Button>
-          )}
-        </DialogActions>
       </Dialog>
     </>
   );
